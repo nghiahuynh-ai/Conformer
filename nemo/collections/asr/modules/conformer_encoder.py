@@ -114,7 +114,6 @@ class ConformerEncoder(NeuralModule, Exportable):
         n_layers,
         d_model,
         feat_out=-1,
-        latent_dim=32,
         subsampling='striding',
         subsampling_factor=4,
         subsampling_conv_channels=-1,
@@ -130,6 +129,7 @@ class ConformerEncoder(NeuralModule, Exportable):
         dropout=0.1,
         dropout_emb=0.1,
         dropout_att=0.0,
+        latent_dim=32,
     ):
         super().__init__()
 
