@@ -129,7 +129,6 @@ class ConformerEncoder(NeuralModule, Exportable):
         dropout=0.1,
         dropout_emb=0.1,
         dropout_att=0.0,
-        latent_dim=32,
     ):
         super().__init__()
 
@@ -191,6 +190,7 @@ class ConformerEncoder(NeuralModule, Exportable):
         else:
             raise ValueError(f"Not valid self_attention_model: '{self_attention_model}'!")
 
+        latent_dim=32
         assert n_layers % 2 == 0
         diff_dim = math.ceil((d_model - latent_dim) / (n_layers / 2))
         self.layers = nn.ModuleList()
