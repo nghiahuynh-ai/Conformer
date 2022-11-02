@@ -114,6 +114,7 @@ class ConformerEncoder(NeuralModule, Exportable):
         n_layers,
         d_model,
         feat_out=-1,
+        latent_dim=32,
         subsampling='striding',
         subsampling_factor=4,
         subsampling_conv_channels=-1,
@@ -190,6 +191,8 @@ class ConformerEncoder(NeuralModule, Exportable):
         else:
             raise ValueError(f"Not valid self_attention_model: '{self_attention_model}'!")
 
+        assert n_layers % 2 == 0
+        diff_dim = math.ceil((d_model - latent_dim) / (n_layers / 2))
         self.layers = nn.ModuleList()
         for i in range(n_layers):
             layer = ConformerLayer(
@@ -205,6 +208,22 @@ class ConformerEncoder(NeuralModule, Exportable):
                 pos_bias_v=pos_bias_v,
             )
             self.layers.append(layer)
+            
+            if i < (n_layers/2):
+                if i < (n_layers/2) - 1:
+                    out_dim = d_model - diff_dim
+                else:
+                    out_dim = latent_dim
+            else:
+                if i == (n_layers/2):
+                    out_dim = d_model - latent_dim - (n_layers/2 - 1) * diff_dim
+                else:
+                    out_dim = d_model + diff_dim
+                    
+            proj = nn.Linear(d_model, out_dim)
+            self.layers.append(proj)
+            
+            d_model = out_dim
 
         if feat_out > 0 and feat_out != self._feat_out:
             self.out_proj = nn.Linear(self._feat_out, feat_out)
