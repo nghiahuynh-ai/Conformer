@@ -291,7 +291,6 @@ class ConformerEncoder(NeuralModule, Exportable):
             pad_mask = None
 
         for lth, layer in enumerate(self.layers):
-            print('===================', lth, '=========================')
             if lth % 2 == 0:
                 audio_signal = layer(x=audio_signal, att_mask=att_mask, pos_emb=pos_emb, pad_mask=pad_mask)
             else:
