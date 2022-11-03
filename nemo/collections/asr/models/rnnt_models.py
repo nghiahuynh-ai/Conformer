@@ -758,6 +758,7 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
             self._optim_normalize_txu = [encoded_len.max(), transcript_len.max()]
         
         l1 = nn.L1Loss()
+        print('===', self.encoder.origin.shape, encoded.shape, '===')
         l1_loss = l1(self.encoder.origin, encoded)
         
         return {'loss': loss_value + l1_loss}
