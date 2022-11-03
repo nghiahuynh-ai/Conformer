@@ -241,8 +241,6 @@ class ConformerEncoder(NeuralModule, Exportable):
                 else:
                     out_dim = d_model + downsize_diff
             
-            print('out: ', out_dim)
-            
             proj = nn.Linear(d_model, out_dim)
             self.layers.append(proj)
             
@@ -320,9 +318,13 @@ class ConformerEncoder(NeuralModule, Exportable):
                 audio_signal = layer(x=audio_signal, att_mask=att_mask, pos_emb=pos_emb, pad_mask=pad_mask)
             else:
                 audio_signal = layer(audio_signal)
-
+        
+        print('===', audio_signal.shape)
+        
         if self.out_proj is not None:
             audio_signal = self.out_proj(audio_signal)
+            
+        print('===', audio_signal.shape)
 
         audio_signal = torch.transpose(audio_signal, 1, 2)
         return audio_signal, length
