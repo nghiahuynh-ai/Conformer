@@ -267,10 +267,10 @@ class ConformerEncoder(NeuralModule, Exportable):
 
         audio_signal = torch.transpose(audio_signal, 1, 2)
 
-        # if isinstance(self.pre_encode, ConvSubsampling):
-        #     audio_signal, length = self.pre_encode(audio_signal, length)
-        # else:
-        #     audio_signal = self.pre_encode(audio_signal)
+        if isinstance(self.pre_encode, ConvSubsampling):
+            audio_signal, length = self.pre_encode(audio_signal, length)
+        else:
+            audio_signal = self.pre_encode(audio_signal)
         audio_signal, pos_emb = self.pos_enc(audio_signal)
         # adjust size
         max_audio_length = audio_signal.size(1)
