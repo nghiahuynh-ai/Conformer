@@ -90,19 +90,19 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
             num_classes=self.joint.num_classes_with_blank - 1, loss_name=loss_name, loss_kwargs=loss_kwargs
         )
         
-        subsampling = self._cfg.encoder.subsampling
-        subsampling_factor = self._cfg.encoder.subsampling_factor
-        feat_in = self._cfg.encoder.feat_in
-        d_model = self._cfg.encoder.d_model
-        subsampling_conv_channels = d_model
-        self.subsampling = ConvSubsampling(
-            subsampling=subsampling,
-            subsampling_factor=subsampling_factor,
-            feat_in=feat_in,
-            feat_out=d_model,
-            conv_channels=subsampling_conv_channels,
-            activation=nn.ReLU(),
-        )
+        # subsampling = self._cfg.encoder.subsampling
+        # subsampling_factor = self._cfg.encoder.subsampling_factor
+        # feat_in = self._cfg.encoder.feat_in
+        self.d_model = self._cfg.encoder.d_model
+        # subsampling_conv_channels = d_model
+        # self.subsampling = ConvSubsampling(
+        #     subsampling=subsampling,
+        #     subsampling_factor=subsampling_factor,
+        #     feat_in=feat_in,
+        #     feat_out=d_model,
+        #     conv_channels=subsampling_conv_channels,
+        #     activation=nn.ReLU(),
+        # )
 
         if hasattr(self.cfg, 'spec_augment') and self._cfg.spec_augment is not None:
             self.spec_augmentation = EncDecRNNTModel.from_config_dict(self.cfg.spec_augment)
@@ -688,7 +688,9 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
                 input_signal=input_signal, length=input_signal_length,
             )
             
-        processed_signal, processed_signal_length = self.subsampling(processed_signal, processed_signal_length)
+        # processed_signal, processed_signal_length = self.subsampling(processed_signal, processed_signal_length)
+        in_proj = nn.Linear(processed_signal_length, self.d_model)
+        processed_signal = in_proj(processed_signal)
             
         self.origin_input = processed_signal
         
