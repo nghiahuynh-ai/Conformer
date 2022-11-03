@@ -113,7 +113,7 @@ model:
     specshot_ratio: 0.2
 
     feat_in: ${model.preprocessor.features}
-    laten_dim: 32
+    latent_dim: 16
     feat_out: -1 # you may set it if you need different output size other than the default d_model
     n_layers: 17
     d_model: 512
