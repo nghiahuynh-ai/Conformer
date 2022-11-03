@@ -687,7 +687,8 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
             processed_signal, processed_signal_length = self.preprocessor(
                 input_signal=input_signal, length=input_signal_length,
             )
-            
+        print("===================", processed_signal.shape, "=========================")
+        raise
         processed_signal, processed_signal_length = self.subsampling(processed_signal, processed_signal_length)
             
         self.origin_input = processed_signal
