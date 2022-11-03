@@ -695,6 +695,8 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
         else:
             encoded, encoded_len = self.forward(input_signal=signal, input_signal_length=signal_len)
         del signal
+        
+        print('===', encoded.shape, '===')
             
         # During training, loss must be computed, so decoder forward is necessary
         if batch_nb in self.masked_batch:
