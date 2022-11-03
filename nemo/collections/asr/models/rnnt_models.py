@@ -674,14 +674,14 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
             )
         
         # Spec augment is not applied during evaluation/testing
-        if (self.spec_augmentation is not None) and self.training and (self.batch_nb not in self.masked_batch):
-            processed_signal = self.spec_augmentation(input_spec=processed_signal, length=processed_signal_length)
+        # if (self.spec_augmentation is not None) and self.training and (self.batch_nb not in self.masked_batch):
+        #     processed_signal = self.spec_augmentation(input_spec=processed_signal, length=processed_signal_length)
 
-        if (self.gradient_mask is not None) and self.training and (self.batch_nb in self.masked_batch):
-            processed_signal = self.gradient_mask(input_spec=processed_signal)
+        # if (self.gradient_mask is not None) and self.training and (self.batch_nb in self.masked_batch):
+        #     processed_signal = self.gradient_mask(input_spec=processed_signal)
         
-        encoded, encoded_len = self.encoder(audio_signal=processed_signal, length=processed_signal_length)
-        return encoded, encoded_len
+        origin, encoded, encoded_len = self.encoder(audio_signal=processed_signal, length=processed_signal_length)
+        return origin, encoded, encoded_len
 
     # PTL-specific methods
     def training_step(self, batch, batch_nb):
@@ -691,9 +691,9 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
 
         # forward() only performs encoder forward
         if isinstance(batch, DALIOutputs) and batch.has_processed_signal:
-            encoded, encoded_len = self.forward(processed_signal=signal, processed_signal_length=signal_len)
+            origin, encoded, encoded_len = self.forward(processed_signal=signal, processed_signal_length=signal_len)
         else:
-            encoded, encoded_len = self.forward(input_signal=signal, input_signal_length=signal_len)
+            origin, encoded, encoded_len = self.forward(input_signal=signal, input_signal_length=signal_len)
         del signal
             
         # During training, loss must be computed, so decoder forward is necessary
@@ -757,7 +757,10 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
         if self._optim_normalize_joint_txu:
             self._optim_normalize_txu = [encoded_len.max(), transcript_len.max()]
         
-        return {'loss': loss_value}
+        l1 = nn.L1Loss()
+        l1_loss = l1(origin, encoded)
+        
+        return {'loss': loss_value + l1_loss}
 
     def predict_step(self, batch, batch_idx, dataloader_idx=0):
         signal, signal_len, transcript, transcript_len, sample_id = batch
