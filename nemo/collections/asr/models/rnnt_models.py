@@ -690,7 +690,7 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
 
         # processed_signal, processed_signal_length = self.subsampling(processed_signal, processed_signal_length)
         _, _, in_feature = processed_signal.shape
-        in_proj = nn.Linear(in_feature, self.d_model)
+        in_proj = nn.Linear(in_feature, self.d_model).to('cuda:0')
         processed_signal = in_proj(processed_signal)
         
         self.origin_input = processed_signal
