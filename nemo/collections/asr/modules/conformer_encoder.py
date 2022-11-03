@@ -311,7 +311,7 @@ class ConformerEncoder(NeuralModule, Exportable):
         else:
             pad_mask = None
 
-        audio_signal = self.augment(audio_signal, length)
+        audio_signal = self.augment(input_spec=audio_signal, length=length)
         origin = audio_signal
 
         for lth, layer in enumerate(self.layers):
