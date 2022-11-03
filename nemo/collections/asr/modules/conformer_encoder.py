@@ -31,7 +31,7 @@ from nemo.collections.asr.modules.audio_preprocessing import SpectrogramAugmenta
 __all__ = ['ConformerEncoder']
 
 
-class ConformerEncoder(NeuralModule, Exportable):
+class ConformerEncoder(Exportable):
     """
     The encoder for ASR model of Conformer.
     Based on this paper:
