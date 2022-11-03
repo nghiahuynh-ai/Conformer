@@ -240,7 +240,9 @@ class ConformerEncoder(NeuralModule, Exportable):
                     out_dim = pre_latent_dim
                 else:
                     out_dim = d_model + downsize_diff
-                    
+            
+            print('out: ', out_dim)
+            
             proj = nn.Linear(d_model, out_dim)
             self.layers.append(proj)
             
