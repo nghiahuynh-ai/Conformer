@@ -688,14 +688,14 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
                 input_signal=input_signal, length=input_signal_length,
             )
 
-        _, _, length = processed_signal.shape
-        processed_signal = torch.transpose(processed_signal, 1, 2)
-        processed_signal, processed_signal_length = self.subsampling(processed_signal, torch.tensor([length]))
-        processed_signal = torch.transpose(processed_signal, 1, 2)
-        _, _, processed_signal_length = processed_signal.shape
-        processed_signal_length = torch.tensor([processed_signal_length]).to(processed_signal.device)
+            _, _, length = processed_signal.shape
+            processed_signal = torch.transpose(processed_signal, 1, 2)
+            processed_signal, processed_signal_length = self.subsampling(processed_signal, torch.tensor([length]))
+            processed_signal = torch.transpose(processed_signal, 1, 2)
+            _, _, processed_signal_length = processed_signal.shape
+            processed_signal_length = torch.tensor([processed_signal_length]).to(processed_signal.device)
         
-        self.origin_input = processed_signal
+            self.origin_input = processed_signal
         
         # Spec augment is not applied during evaluation/testing
         if (self.spec_augmentation is not None) and self.training and (self.batch_nb not in self.masked_batch):
@@ -784,7 +784,7 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
         l1 = nn.L1Loss()
         l1_loss = l1(self.origin_input, encoded)
         
-        return {'loss': loss_value}
+        return {'loss': loss_value + l1_loss}
 
     def predict_step(self, batch, batch_idx, dataloader_idx=0):
         signal, signal_len, transcript, transcript_len, sample_id = batch
