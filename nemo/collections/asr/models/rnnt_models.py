@@ -94,7 +94,7 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
         subsampling_factor = self._cfg.encoder.subsampling_factor
         feat_in = self._cfg.encoder.feat_in
         d_model = self._cfg.encoder.d_model
-        subsampling_conv_channels = self._cfg.encoder.subsampling_conv_channels
+        subsampling_conv_channels = d_model
         self.subsampling = ConvSubsampling(
             subsampling=subsampling,
             subsampling_factor=subsampling_factor,
