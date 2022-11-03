@@ -311,7 +311,6 @@ class ConformerEncoder(NeuralModule, Exportable):
             pad_mask = None
 
         audio_signal = self.augment(input_spec=audio_signal, length=length)
-        self.origin = audio_signal
 
         for lth, layer in enumerate(self.layers):
             if lth % 2 == 0:
@@ -319,14 +318,11 @@ class ConformerEncoder(NeuralModule, Exportable):
             else:
                 audio_signal = layer(audio_signal)
         
-        print('===', audio_signal.shape)
-        
         if self.out_proj is not None:
             audio_signal = self.out_proj(audio_signal)
-            
-        print('===', audio_signal.shape)
 
         audio_signal = torch.transpose(audio_signal, 1, 2)
+        self.origin = audio_signal
         return audio_signal, length
 
     def update_max_seq_length(self, seq_length: int, device):

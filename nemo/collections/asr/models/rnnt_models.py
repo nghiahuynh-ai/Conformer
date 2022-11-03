@@ -695,8 +695,6 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
         else:
             encoded, encoded_len = self.forward(input_signal=signal, input_signal_length=signal_len)
         del signal
-        
-        print('===', encoded.shape, '===')
             
         # During training, loss must be computed, so decoder forward is necessary
         if batch_nb in self.masked_batch:
@@ -760,7 +758,6 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
             self._optim_normalize_txu = [encoded_len.max(), transcript_len.max()]
         
         l1 = nn.L1Loss()
-        print('===', self.encoder.origin.shape, encoded.shape, '===')
         l1_loss = l1(self.encoder.origin, encoded)
         
         return {'loss': loss_value + l1_loss}
