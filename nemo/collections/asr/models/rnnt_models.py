@@ -690,7 +690,7 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
 
         _, _, length = processed_signal.shape
         processed_signal = torch.transpose(processed_signal, 1, 2)
-        processed_signal, processed_signal_length = self.subsampling(processed_signal, length)
+        processed_signal, processed_signal_length = self.subsampling(processed_signal, torch.tensor([length]))
         processed_signal = torch.transpose(processed_signal, 1, 2)
         _, _, processed_signal_length = processed_signal.shape
         
