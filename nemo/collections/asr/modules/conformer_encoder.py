@@ -31,7 +31,7 @@ from nemo.collections.asr.modules.audio_preprocessing import SpectrogramAugmenta
 __all__ = ['ConformerEncoder']
 
 
-class ConformerEncoder(Exportable):
+class ConformerEncoder(NeuralModule, Exportable):
     """
     The encoder for ASR model of Conformer.
     Based on this paper:
@@ -87,28 +87,27 @@ class ConformerEncoder(Exportable):
         input_example_length = torch.randint(1, max_dim, (max_batch,)).to(dev)
         return tuple([input_example, input_example_length])
 
-    # @property
-    # def input_types(self):
-    #     """Returns definitions of module input ports.
-    #     """
-    #     return OrderedDict(
-    #         {
-    #             "audio_signal": NeuralType(('B', 'D', 'T'), SpectrogramType()),
-    #             "length": NeuralType(tuple('B'), LengthsType()),
-    #         }
-    #     )
+    @property
+    def input_types(self):
+        """Returns definitions of module input ports.
+        """
+        return OrderedDict(
+            {
+                "audio_signal": NeuralType(('B', 'D', 'T'), SpectrogramType()),
+                "length": NeuralType(tuple('B'), LengthsType()),
+            }
+        )
 
-    # @property
-    # def output_types(self):
-    #     """Returns definitions of module output ports.
-    #     """
-    #     return OrderedDict(
-    #         {
-    #             "origin": NeuralType(('B', 'D', 'T'), AcousticEncodedRepresentation()),
-    #             "outputs": NeuralType(('B', 'D', 'T'), AcousticEncodedRepresentation()),
-    #             "encoded_lengths": NeuralType(tuple('B'), LengthsType()),
-    #         }
-    #     )
+    @property
+    def output_types(self):
+        """Returns definitions of module output ports.
+        """
+        return OrderedDict(
+            {
+                "outputs": NeuralType(('B', 'D', 'T'), AcousticEncodedRepresentation()),
+                "encoded_lengths": NeuralType(tuple('B'), LengthsType()),
+            }
+        )
 
     def __init__(
         self,
@@ -312,7 +311,7 @@ class ConformerEncoder(Exportable):
             pad_mask = None
 
         audio_signal = self.augment(input_spec=audio_signal, length=length)
-        origin = audio_signal
+        self.origin = audio_signal
 
         for lth, layer in enumerate(self.layers):
             if lth % 2 == 0:
@@ -324,7 +323,7 @@ class ConformerEncoder(Exportable):
             audio_signal = self.out_proj(audio_signal)
 
         audio_signal = torch.transpose(audio_signal, 1, 2)
-        return origin, audio_signal, length
+        return audio_signal, length
 
     def update_max_seq_length(self, seq_length: int, device):
         # Find global max audio length across all nodes
