@@ -293,14 +293,13 @@ class ConformerEncoder(NeuralModule, Exportable):
 
         longskip_values = []
         for lth, layer in enumerate(self.layers):
-            if (lth < int(self.n_layers/2) - 1) and (lth % 2 == 0):
+            if (lth < self.n_layers - 1) and (lth % 2 == 0):
                 audio_signal = layer(x=audio_signal, att_mask=att_mask, pos_emb=pos_emb, pad_mask=pad_mask)
                 longskip_values = [audio_signal] + longskip_values
-            elif (lth > int(self.n_layers/2)) and (lth % 2 == 0):
+            elif (lth > self.n_layers) and (lth % 2 == 0):
                 audio_signal = audio_signal + longskip_values[lth - self.n_layers - 1]
                 audio_signal = layer(x=audio_signal, att_mask=att_mask, pos_emb=pos_emb, pad_mask=pad_mask)
-            elif lth == int(self.n_layers/2) - 1:
-                print(lth)
+            elif lth == self.n_layers:
                 audio_signal = layer(x=audio_signal, att_mask=att_mask, pos_emb=pos_emb, pad_mask=pad_mask)
             else:
                 audio_signal = layer(audio_signal)
