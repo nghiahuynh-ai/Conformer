@@ -26,7 +26,6 @@ from nemo.core.classes.common import typecheck
 from nemo.core.classes.exportable import Exportable
 from nemo.core.classes.module import NeuralModule
 from nemo.core.neural_types import AcousticEncodedRepresentation, LengthsType, NeuralType, SpectrogramType
-from nemo.collections.asr.modules.audio_preprocessing import SpectrogramAugmentation
 
 __all__ = ['ConformerEncoder']
 
@@ -132,27 +131,8 @@ class ConformerEncoder(NeuralModule, Exportable):
         dropout=0.1,
         dropout_emb=0.1,
         dropout_att=0.0,
-        freq_masks=0,
-        time_masks=0,
-        freq_width=10,
-        time_width=10,
-        rect_masks=0,
-        rect_time=5,
-        rect_freq=20,
-        specshot_ratio=0,
     ):
         super().__init__()
-        
-        self.augment = SpectrogramAugmentation(
-            freq_masks=freq_masks,
-            time_masks=time_masks,
-            freq_width=freq_width,
-            time_width=time_width,
-            rect_masks=rect_masks,
-            rect_time=rect_time,
-            rect_freq=rect_freq,
-            specshot_ratio=specshot_ratio,
-        )
 
         d_ff = d_model * ff_expansion_factor
         self.d_model = d_model
@@ -309,11 +289,6 @@ class ConformerEncoder(NeuralModule, Exportable):
             pad_mask = ~pad_mask
         else:
             pad_mask = None
-
-        audio_signal = torch.transpose(audio_signal, 1, 2)
-        self.origin = audio_signal
-        audio_signal = self.augment(input_spec=audio_signal, length=length)
-        audio_signal = torch.transpose(audio_signal, 1, 2)
 
         for lth, layer in enumerate(self.layers):
             if lth % 2 == 0:
