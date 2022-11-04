@@ -296,6 +296,7 @@ class ConformerEncoder(NeuralModule, Exportable):
             if lth % 2 == 0 and lth < int(self.n_layers/2):
                 audio_signal = layer(x=audio_signal, att_mask=att_mask, pos_emb=pos_emb, pad_mask=pad_mask)
                 longskip_values = [audio_signal] + longskip_values
+                print('=====', audio_signal.shape, '=====')
             elif lth % 2 == 0 and lth > int(self.n_layers/2):
                 audio_signal = audio_signal + longskip_values[lth - int(self.n_layers/2) - 1]
                 audio_signal = layer(x=audio_signal, att_mask=att_mask, pos_emb=pos_emb, pad_mask=pad_mask)
