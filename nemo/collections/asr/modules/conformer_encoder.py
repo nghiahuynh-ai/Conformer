@@ -192,7 +192,8 @@ class ConformerEncoder(NeuralModule, Exportable):
         else:
             raise ValueError(f"Not valid self_attention_model: '{self_attention_model}'!")
         
-        assert n_layers % 2 == 0
+        assert n_layers % 2 == 1
+        self.n_layers = n_layers
         self.layers = nn.ModuleList()
         for i in range(n_layers):
             layer = ConformerLayer(
@@ -209,15 +210,15 @@ class ConformerEncoder(NeuralModule, Exportable):
             )
             self.layers.append(layer)
             
-            if i < (n_layers/2):
-                if i < (n_layers/2) - 1:
-                    out_dim = d_model - downsize_diff
-                else:
-                    out_dim = latent_dim
-                    pre_latent_dim = d_model
+            if i < int(n_layers/2):
+                out_dim = d_model - downsize_diff
+                if i == int(n_layers/2) - 1:
+                    pre_out_dim = out_dim
+            elif i == int(n_layers/2):
+                out_dim = latent_dim
             else:
-                if i == (n_layers/2):
-                    out_dim = pre_latent_dim
+                if i == int(n_layers/2) + 1:
+                    out_dim = pre_out_dim
                 else:
                     out_dim = d_model + downsize_diff
             
@@ -290,8 +291,15 @@ class ConformerEncoder(NeuralModule, Exportable):
         else:
             pad_mask = None
 
+        longskip_values = []
         for lth, layer in enumerate(self.layers):
-            if lth % 2 == 0:
+            if lth % 2 == 0 and lth < int(self.n_layers/2):
+                audio_signal = layer(x=audio_signal, att_mask=att_mask, pos_emb=pos_emb, pad_mask=pad_mask)
+                longskip_values = [audio_signal] + longskip_values
+            elif lth % 2 == 0 and lth > int(self.n_layers/2):
+                audio_signal = audio_signal + longskip_values[lth - int(self.n_layers/2) - 1]
+                audio_signal = layer(x=audio_signal, att_mask=att_mask, pos_emb=pos_emb, pad_mask=pad_mask)
+            elif lth % 2 == 0 and lth == int(self.n_layers/2):
                 audio_signal = layer(x=audio_signal, att_mask=att_mask, pos_emb=pos_emb, pad_mask=pad_mask)
             else:
                 audio_signal = layer(audio_signal)
