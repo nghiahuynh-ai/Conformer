@@ -195,6 +195,7 @@ class ConformerEncoder(NeuralModule, Exportable):
         assert n_layers % 2 == 1
         self.n_layers = n_layers
         self.layers = nn.ModuleList()
+        self.projects = nn.ModuleList()
         for i in range(n_layers):
             layer = ConformerLayer(
                 d_model=d_model,
@@ -223,7 +224,7 @@ class ConformerEncoder(NeuralModule, Exportable):
                     out_dim = d_model + downsize_diff
             
             proj = nn.Linear(d_model, out_dim)
-            self.layers.append(proj)
+            self.projects.append(proj)
             
             d_model = out_dim
 
@@ -293,17 +294,15 @@ class ConformerEncoder(NeuralModule, Exportable):
 
         longskip_values = []
         for lth, layer in enumerate(self.layers):
-            if lth % 2 == 0 and lth < int(self.n_layers/2):
+            if lth < int(self.n_layers/2):
                 audio_signal = layer(x=audio_signal, att_mask=att_mask, pos_emb=pos_emb, pad_mask=pad_mask)
                 longskip_values = [audio_signal] + longskip_values
-                print('=====', audio_signal.shape, '=====')
-            elif lth % 2 == 0 and lth > int(self.n_layers/2):
+            elif lth > int(self.n_layers/2):
                 audio_signal = audio_signal + longskip_values[lth - int(self.n_layers/2) - 1]
                 audio_signal = layer(x=audio_signal, att_mask=att_mask, pos_emb=pos_emb, pad_mask=pad_mask)
-            elif lth % 2 == 0 and lth == int(self.n_layers/2):
+            elif lth == int(self.n_layers/2):
                 audio_signal = layer(x=audio_signal, att_mask=att_mask, pos_emb=pos_emb, pad_mask=pad_mask)
-            else:
-                audio_signal = layer(audio_signal)
+            audio_signal = self.projects[lth](audio_signal)
         
         if self.out_proj is not None:
             audio_signal = self.out_proj(audio_signal)
