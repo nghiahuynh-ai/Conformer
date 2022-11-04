@@ -291,9 +291,9 @@ class ConformerEncoder(NeuralModule, Exportable):
         # Create the self-attention and padding masks
         
         audio_signal = torch.transpose(audio_signal, 1, 2)
-        _, _, lenght = audio_signal.shape
+        batch, _, lenght = audio_signal.shape
         self.origin = audio_signal
-        audio_signal = self.augment(input_spec=audio_signal, length=lenght)
+        audio_signal = self.augment(input_spec=audio_signal, length=[lenght] * batch)
         audio_signal = torch.transpose(audio_signal, 1, 2)
 
         pad_mask = self.make_pad_mask(max_audio_length, length)
