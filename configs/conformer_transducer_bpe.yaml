@@ -95,16 +95,25 @@ model:
     dither: 0.00001
     pad_to: 0
 
-  spec_augment:
-    _target_: nemo.collections.asr.modules.SpectrogramAugmentation
-    freq_masks: 2 # set to zero to disable it
-    time_masks: 10 # set to zero to disable it
+  # spec_augment:
+  #   _target_: nemo.collections.asr.modules.SpectrogramAugmentation
+  #   freq_masks: 2 # set to zero to disable it
+  #   time_masks: 10 # set to zero to disable it
+  #   freq_width: 8
+  #   time_width: 0.01
+  #   specshot_ratio: 0.2
+
+  alpha: 0.1
+
+  encoder:
+    _target_: nemo.collections.asr.modules.ConformerEncoder
+
+    freq_masks: 2 
+    time_masks: 10 
     freq_width: 8
     time_width: 0.01
     specshot_ratio: 0.2
 
-  encoder:
-    _target_: nemo.collections.asr.modules.ConformerEncoder
     feat_in: ${model.preprocessor.features}
     latent_dim: 32
     downsize_diff: 16

@@ -104,6 +104,11 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
         else:
             self.masked_batch = []
             self.gradient_mask = None
+            
+        if hasattr(self.cfg, 'alpha'):
+            self.alpha = self._cfg.alpha
+        else:
+            self.alpha = 0
 
         # Setup decoding objects
         self.decoding = RNNTDecoding(
@@ -674,11 +679,11 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
             )
         
         # Spec augment is not applied during evaluation/testing
-        if (self.spec_augmentation is not None) and self.training and (self.batch_nb not in self.masked_batch):
-            processed_signal = self.spec_augmentation(input_spec=processed_signal, length=processed_signal_length)
+        # if (self.spec_augmentation is not None) and self.training and (self.batch_nb not in self.masked_batch):
+        #     processed_signal = self.spec_augmentation(input_spec=processed_signal, length=processed_signal_length)
 
-        if (self.gradient_mask is not None) and self.training and (self.batch_nb in self.masked_batch):
-            processed_signal = self.gradient_mask(input_spec=processed_signal)
+        # if (self.gradient_mask is not None) and self.training and (self.batch_nb in self.masked_batch):
+        #     processed_signal = self.gradient_mask(input_spec=processed_signal)
         
         encoded, encoded_len = self.encoder(audio_signal=processed_signal, length=processed_signal_length)
         return encoded, encoded_len
@@ -757,7 +762,10 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
         if self._optim_normalize_joint_txu:
             self._optim_normalize_txu = [encoded_len.max(), transcript_len.max()]
         
-        return {'loss': loss_value}
+        l1 = nn.L1Loss()
+        l1_loss = l1(self.encoder.origin, encoded)
+        
+        return {'loss': (1 - self.alpha) * loss_value + self.alpha * l1_loss}
 
     def predict_step(self, batch, batch_idx, dataloader_idx=0):
         signal, signal_len, transcript, transcript_len, sample_id = batch

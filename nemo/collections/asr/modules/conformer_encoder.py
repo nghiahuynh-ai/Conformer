@@ -26,6 +26,7 @@ from nemo.core.classes.common import typecheck
 from nemo.core.classes.exportable import Exportable
 from nemo.core.classes.module import NeuralModule
 from nemo.core.neural_types import AcousticEncodedRepresentation, LengthsType, NeuralType, SpectrogramType
+from nemo.collections.asr.modules.audio_preprocessing import SpectrogramAugmentation
 
 __all__ = ['ConformerEncoder']
 
@@ -131,8 +132,21 @@ class ConformerEncoder(NeuralModule, Exportable):
         dropout=0.1,
         dropout_emb=0.1,
         dropout_att=0.0,
+        freq_masks=2, 
+        time_masks=10, 
+        freq_width=8,
+        time_width=0.01,
+        specshot_ratio=0.2,
     ):
         super().__init__()
+        
+        self.augment = SpectrogramAugmentation(
+            freq_masks=freq_masks,
+            time_masks=time_masks,
+            freq_width=freq_width,
+            time_width=time_width,
+            specshot_ratio=specshot_ratio,
+        )
 
         d_ff = d_model * ff_expansion_factor
         self.d_model = d_model
@@ -192,8 +206,8 @@ class ConformerEncoder(NeuralModule, Exportable):
         else:
             raise ValueError(f"Not valid self_attention_model: '{self_attention_model}'!")
         
-        assert n_layers % 2 == 1
-        self.n_layers = n_layers
+        assert n_layers % 2 == 0
+        self.activation = nn.ReLU()
         self.layers = nn.ModuleList()
         for i in range(n_layers):
             layer = ConformerLayer(
@@ -210,15 +224,15 @@ class ConformerEncoder(NeuralModule, Exportable):
             )
             self.layers.append(layer)
             
-            if i < int(n_layers/2):
-                out_dim = d_model - downsize_diff
-                if i == int(n_layers/2) - 1:
-                    pre_out_dim = out_dim
-            elif i == int(n_layers/2):
-                out_dim = latent_dim
+            if i < (n_layers/2):
+                if i < (n_layers/2) - 1:
+                    out_dim = d_model - downsize_diff
+                else:
+                    out_dim = latent_dim
+                    pre_latent_dim = d_model
             else:
-                if i == int(n_layers/2) + 1:
-                    out_dim = pre_out_dim
+                if i == (n_layers/2):
+                    out_dim = pre_latent_dim
                 else:
                     out_dim = d_model + downsize_diff
             
@@ -276,6 +290,11 @@ class ConformerEncoder(NeuralModule, Exportable):
         # adjust size
         max_audio_length = audio_signal.size(1)
         # Create the self-attention and padding masks
+        
+        audio_signal = torch.transpose(audio_signal, 1, 2)
+        self.origin = audio_signal
+        audio_signal = self.augment(audio_signal)
+        audio_signal = torch.transpose(audio_signal, 1, 2)
 
         pad_mask = self.make_pad_mask(max_audio_length, length)
         att_mask = pad_mask.unsqueeze(1).repeat([1, max_audio_length, 1])
@@ -291,18 +310,12 @@ class ConformerEncoder(NeuralModule, Exportable):
         else:
             pad_mask = None
 
-        longskip_values = []
         for lth, layer in enumerate(self.layers):
-            if (lth < self.n_layers - 1) and (lth % 2 == 0):
-                audio_signal = layer(x=audio_signal, att_mask=att_mask, pos_emb=pos_emb, pad_mask=pad_mask)
-                longskip_values = [audio_signal] + longskip_values
-            elif (lth > self.n_layers) and (lth % 2 == 0):
-                audio_signal = audio_signal + longskip_values[lth - self.n_layers - 1]
-                audio_signal = layer(x=audio_signal, att_mask=att_mask, pos_emb=pos_emb, pad_mask=pad_mask)
-            elif lth == self.n_layers - 1:
+            if lth % 2 == 0:
                 audio_signal = layer(x=audio_signal, att_mask=att_mask, pos_emb=pos_emb, pad_mask=pad_mask)
             else:
                 audio_signal = layer(audio_signal)
+                audio_signal = self.activation(audio_signal)
         
         if self.out_proj is not None:
             audio_signal = self.out_proj(audio_signal)
