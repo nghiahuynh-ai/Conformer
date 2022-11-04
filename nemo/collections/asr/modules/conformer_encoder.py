@@ -207,7 +207,6 @@ class ConformerEncoder(NeuralModule, Exportable):
             raise ValueError(f"Not valid self_attention_model: '{self_attention_model}'!")
         
         assert n_layers % 2 == 0
-        self.activation = nn.ReLU()
         self.layers = nn.ModuleList()
         for i in range(n_layers):
             layer = ConformerLayer(
@@ -292,8 +291,9 @@ class ConformerEncoder(NeuralModule, Exportable):
         # Create the self-attention and padding masks
         
         audio_signal = torch.transpose(audio_signal, 1, 2)
+        _, _, lenght = audio_signal.shape
         self.origin = audio_signal
-        audio_signal = self.augment(audio_signal)
+        audio_signal = self.augment(input_spec=audio_signal, length=lenght)
         audio_signal = torch.transpose(audio_signal, 1, 2)
 
         pad_mask = self.make_pad_mask(max_audio_length, length)
@@ -315,7 +315,6 @@ class ConformerEncoder(NeuralModule, Exportable):
                 audio_signal = layer(x=audio_signal, att_mask=att_mask, pos_emb=pos_emb, pad_mask=pad_mask)
             else:
                 audio_signal = layer(audio_signal)
-                audio_signal = self.activation(audio_signal)
         
         if self.out_proj is not None:
             audio_signal = self.out_proj(audio_signal)
