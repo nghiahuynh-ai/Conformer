@@ -93,17 +93,6 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
             self.spec_augmentation = EncDecRNNTModel.from_config_dict(self.cfg.spec_augment)
         else:
             self.spec_augmentation = None
-            
-        if hasattr(self.cfg, 'gradient_mask') and self._cfg.gradient_mask.apply:
-            self.masked_batch = self._cfg.gradient_mask.masked_batch
-            self.gradient_mask = GradientMask(
-                num_masks=self._cfg.gradient_mask.num_masks,
-                mask_width=self._cfg.gradient_mask.mask_width,
-                mask_value=self._cfg.gradient_mask.value,
-            )
-        else:
-            self.masked_batch = []
-            self.gradient_mask = None
 
         # Setup decoding objects
         self.decoding = RNNTDecoding(
@@ -676,9 +665,6 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
         # Spec augment is not applied during evaluation/testing
         if (self.spec_augmentation is not None) and self.training and (self.batch_nb not in self.masked_batch):
             processed_signal = self.spec_augmentation(input_spec=processed_signal, length=processed_signal_length)
-
-        if (self.gradient_mask is not None) and self.training and (self.batch_nb in self.masked_batch):
-            processed_signal = self.gradient_mask(input_spec=processed_signal)
         
         encoded, encoded_len = self.encoder(audio_signal=processed_signal, length=processed_signal_length)
         return encoded, encoded_len
@@ -686,8 +672,6 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
     # PTL-specific methods
     def training_step(self, batch, batch_nb):
         signal, signal_len, transcript, transcript_len = batch
-        
-        self.batch_nb = batch_nb
 
         # forward() only performs encoder forward
         if isinstance(batch, DALIOutputs) and batch.has_processed_signal:
@@ -697,12 +681,7 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
         del signal
             
         # During training, loss must be computed, so decoder forward is necessary
-        if batch_nb in self.masked_batch:
-            # Skip gradient to Decoder
-            with torch.no_grad():
-                decoder, target_length, states = self.decoder(targets=transcript, target_length=transcript_len)
-        else:
-            decoder, target_length, states = self.decoder(targets=transcript, target_length=transcript_len)
+        decoder, target_length, states = self.decoder(targets=transcript, target_length=transcript_len)
 
         if hasattr(self, '_trainer') and self._trainer is not None:
             log_every_n_steps = self._trainer.log_every_n_steps
@@ -962,29 +941,4 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
             **kwargs,
         )
         return encoder_exp + decoder_exp, encoder_descr + decoder_descr
-
-
-class GradientMask(nn.Module, Typing):
-
-    def __init__(self, num_masks=10, mask_width=0.02, mask_value=0.0):
-        super().__init__()
-        self.num_masks = num_masks
-        self.mask_width = mask_width
-        self.mask_value = mask_value
     
-    @torch.no_grad()
-    def forward(self, input_spec):
-        batch, freq, time = input_spec.shape
-        max_offset = max(1, int(time * self.mask_width))
-        mask = torch.ones(batch, time)
-        for batch_idx in range(batch):
-            offset = np.random.randint(1, max_offset)
-            masked_idx = np.random.choice(range(time - offset), size=self.num_masks, replace=False)
-            for idx in masked_idx:
-                mask[batch_idx, idx : idx + offset] = self.mask_value
-        mask = mask > 0
-        input_mask = mask.unsqueeze(1).expand(batch, freq, time)
-        input_spec = input_spec * input_mask.to(input_spec.device)
-        del input_mask
-        del mask
-        return input_spec
