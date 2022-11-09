@@ -348,7 +348,7 @@ class GreedyRNNTInfer(_GreedyRNNTInfer):
                         hypothesis.alignments.append([])  # blank buffer for next timestep
                 else:
                     # Append token to label set, update RNN state.
-                    if y is not None:
+                    if y is not None and y.shape[0] > 0:
                         k = y[0]
                         y = y[1:]
                     hypothesis.y_sequence.append(k)
