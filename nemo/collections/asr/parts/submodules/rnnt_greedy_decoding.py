@@ -262,7 +262,7 @@ class GreedyRNNTInfer(_GreedyRNNTInfer):
                     logitlen = encoded_lengths[batch_idx]
 
                     partial_hypothesis = partial_hypotheses[batch_idx] if partial_hypotheses is not None else None
-                    hypothesis = self._greedy_decode(inseq, logitlen, labels, partial_hypotheses=partial_hypothesis)
+                    hypothesis = self._greedy_decode(inseq, logitlen, partial_hypotheses=partial_hypothesis)
                     hypotheses.append(hypothesis)
 
             # Pack results into Hypotheses
