@@ -219,7 +219,6 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
         self,
         paths2audio_files: List[str],
         batch_size: int = 4,
-        labels: Optional[torch.Tensor] = None,
         return_hypotheses: bool = False,
         partial_hypothesis: Optional[List['Hypothesis']] = None,
         num_workers: int = 0,
@@ -289,7 +288,6 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
                     best_hyp, all_hyp = self.decoding.rnnt_decoder_predictions_tensor(
                         encoded,
                         encoded_len,
-                        labels,
                         return_hypotheses=return_hypotheses,
                         partial_hypotheses=partial_hypothesis,
                     )

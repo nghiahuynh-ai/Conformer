@@ -229,8 +229,7 @@ class GreedyRNNTInfer(_GreedyRNNTInfer):
     def forward(
         self,
         encoder_output: torch.Tensor,
-        encoded_lengths: torch.Tensor,
-        labels: Optional[torch.Tensor] = None, 
+        encoded_lengths: torch.Tensor, 
         partial_hypotheses: Optional[List[rnnt_utils.Hypothesis]] = None,
     ):
         """Returns a list of hypotheses given an input batch of the encoder hidden embedding.
@@ -348,9 +347,6 @@ class GreedyRNNTInfer(_GreedyRNNTInfer):
                         hypothesis.alignments.append([])  # blank buffer for next timestep
                 else:
                     # Append token to label set, update RNN state.
-                    if y is not None and y.shape[0] > 0:
-                        k = y[0]
-                        y = y[1:]
                     hypothesis.y_sequence.append(k)
                     hypothesis.score += float(v)
                     hypothesis.timestep.append(time_idx)
