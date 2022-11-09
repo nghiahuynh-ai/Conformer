@@ -270,7 +270,7 @@ class ConformerEncoder(NeuralModule, Exportable):
             pad_mask = ~pad_mask
         else:
             pad_mask = None
-        print('after subsampling: ', audio_signal.shape)
+        # print('after subsampling: ', audio_signal.shape)
         for lth, layer in enumerate(self.layers):
             audio_signal = layer(x=audio_signal, att_mask=att_mask, pos_emb=pos_emb, pad_mask=pad_mask)
 

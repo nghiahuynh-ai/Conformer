@@ -284,7 +284,7 @@ class GreedyRNNTInfer(_GreedyRNNTInfer):
         # x: [T, 1, D]
         # out_len: [seq_len]
         # y: [labels]
-        print('out_len: ', out_len)
+        # print('out_len: ', out_len)
 
         # Initialize blank state and empty label set in Hypothesis
         hypothesis = rnnt_utils.Hypothesis(score=0.0, y_sequence=[], dec_state=None, timestep=[], last_token=None)
