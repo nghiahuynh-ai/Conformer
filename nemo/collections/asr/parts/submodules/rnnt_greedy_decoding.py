@@ -88,21 +88,21 @@ class _GreedyRNNTInfer(Typing):
             U is the number of target tokens for the current timestep Ti.
     """
 
-    @property
-    def input_types(self):
-        """Returns definitions of module input ports.
-        """
-        return {
-            "encoder_output": NeuralType(('B', 'D', 'T'), AcousticEncodedRepresentation()),
-            "encoded_lengths": NeuralType(tuple('B'), LengthsType()),
-            "partial_hypotheses": [NeuralType(elements_type=HypothesisType(), optional=True)],  # must always be last
-        }
+    # @property
+    # def input_types(self):
+    #     """Returns definitions of module input ports.
+    #     """
+    #     return {
+    #         "encoder_output": NeuralType(('B', 'D', 'T'), AcousticEncodedRepresentation()),
+    #         "encoded_lengths": NeuralType(tuple('B'), LengthsType()),
+    #         "partial_hypotheses": [NeuralType(elements_type=HypothesisType(), optional=True)],  # must always be last
+    #     }
 
-    @property
-    def output_types(self):
-        """Returns definitions of module output ports.
-        """
-        return {"predictions": [NeuralType(elements_type=HypothesisType())]}
+    # @property
+    # def output_types(self):
+    #     """Returns definitions of module output ports.
+    #     """
+    #     return {"predictions": [NeuralType(elements_type=HypothesisType())]}
 
     def __init__(
         self,
