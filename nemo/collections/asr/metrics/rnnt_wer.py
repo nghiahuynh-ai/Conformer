@@ -228,6 +228,7 @@ class AbstractRNNTDecoding(ABC):
         self,
         encoder_output: torch.Tensor,
         encoded_lengths: torch.Tensor,
+        labels: Optional[torch.Tensor] = None, 
         return_hypotheses: bool = False,
         partial_hypotheses: Optional[List[Hypothesis]] = None,
     ) -> (List[str], Optional[List[List[str]]], Optional[Union[Hypothesis, NBestHypotheses]]):
@@ -256,7 +257,10 @@ class AbstractRNNTDecoding(ABC):
         # Compute hypotheses
         with torch.no_grad():
             hypotheses_list = self.decoding(
-                encoder_output=encoder_output, encoded_lengths=encoded_lengths, partial_hypotheses=partial_hypotheses
+                encoder_output=encoder_output, 
+                encoded_lengths=encoded_lengths, 
+                labels=labels,
+                partial_hypotheses=partial_hypotheses
             )  # type: [List[Hypothesis]]
 
             # extract the hypotheses

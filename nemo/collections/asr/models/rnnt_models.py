@@ -219,6 +219,7 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
         self,
         paths2audio_files: List[str],
         batch_size: int = 4,
+        labels: Optional[torch.Tensor] = None,
         return_hypotheses: bool = False,
         partial_hypothesis: Optional[List['Hypothesis']] = None,
         num_workers: int = 0,
@@ -288,6 +289,7 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
                     best_hyp, all_hyp = self.decoding.rnnt_decoder_predictions_tensor(
                         encoded,
                         encoded_len,
+                        labels,
                         return_hypotheses=return_hypotheses,
                         partial_hypotheses=partial_hypothesis,
                     )
@@ -941,3 +943,26 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
             **kwargs,
         )
         return encoder_exp + decoder_exp, encoder_descr + decoder_descr
+
+
+class AlignmentMasking(nn.Module):
+
+    def __init__(self, ratio=0.2):
+        super(AlignmentMasking, self).__init__()
+        self.ratio = ratio
+
+    @torch.no_grad()
+    def forward(self, input_spec):
+        sh = input_spec.shape
+
+        for idx in range(sh[0]):
+            for i in range(self.rect_masks):
+                rect_x = self._rng.randint(0, sh[1] - self.rect_freq)
+                rect_y = self._rng.randint(0, sh[2] - self.rect_time)
+
+                w_x = self._rng.randint(0, self.rect_freq)
+                w_y = self._rng.randint(0, self.rect_time)
+
+                input_spec[idx, rect_x : rect_x + w_x, rect_y : rect_y + w_y] = 0.0
+
+        return input_spec

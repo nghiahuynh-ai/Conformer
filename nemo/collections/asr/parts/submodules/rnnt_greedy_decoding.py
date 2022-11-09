@@ -230,6 +230,7 @@ class GreedyRNNTInfer(_GreedyRNNTInfer):
         self,
         encoder_output: torch.Tensor,
         encoded_lengths: torch.Tensor,
+        labels: Optional[torch.Tensor] = None, 
         partial_hypotheses: Optional[List[rnnt_utils.Hypothesis]] = None,
     ):
         """Returns a list of hypotheses given an input batch of the encoder hidden embedding.
@@ -262,7 +263,7 @@ class GreedyRNNTInfer(_GreedyRNNTInfer):
                     logitlen = encoded_lengths[batch_idx]
 
                     partial_hypothesis = partial_hypotheses[batch_idx] if partial_hypotheses is not None else None
-                    hypothesis = self._greedy_decode(inseq, logitlen, partial_hypotheses=partial_hypothesis)
+                    hypothesis = self._greedy_decode(inseq, logitlen, labels, partial_hypotheses=partial_hypothesis)
                     hypotheses.append(hypothesis)
 
             # Pack results into Hypotheses
@@ -275,10 +276,15 @@ class GreedyRNNTInfer(_GreedyRNNTInfer):
 
     @torch.no_grad()
     def _greedy_decode(
-        self, x: torch.Tensor, out_len: torch.Tensor, partial_hypotheses: Optional[rnnt_utils.Hypothesis] = None
+        self, x: torch.Tensor, 
+        out_len: torch.Tensor, 
+        y: Optional[torch.Tensor] = None, 
+        partial_hypotheses: Optional[rnnt_utils.Hypothesis] = None
     ):
         # x: [T, 1, D]
         # out_len: [seq_len]
+        # y: [labels]
+        print('out_len: ', out_len)
 
         # Initialize blank state and empty label set in Hypothesis
         hypothesis = rnnt_utils.Hypothesis(score=0.0, y_sequence=[], dec_state=None, timestep=[], last_token=None)
@@ -342,6 +348,9 @@ class GreedyRNNTInfer(_GreedyRNNTInfer):
                         hypothesis.alignments.append([])  # blank buffer for next timestep
                 else:
                     # Append token to label set, update RNN state.
+                    if y is not None:
+                        k = y[0]
+                        y = y[1:]
                     hypothesis.y_sequence.append(k)
                     hypothesis.score += float(v)
                     hypothesis.timestep.append(time_idx)
