@@ -667,8 +667,6 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
             processed_signal = self.spec_augmentation(input_spec=processed_signal, length=processed_signal_length)
         
         encoded, encoded_len = self.encoder(audio_signal=processed_signal, length=processed_signal_length)
-        print(encoded)
-        raise 
         return encoded, encoded_len
 
     # PTL-specific methods
