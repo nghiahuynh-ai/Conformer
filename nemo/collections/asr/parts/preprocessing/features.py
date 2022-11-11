@@ -444,6 +444,7 @@ class FilterbankFeatures(nn.Module):
         del mask
         pad_to = self.pad_to
         if pad_to == "max":
+            print('pad_to = max')
             x = nn.functional.pad(x, (0, self.max_length - x.size(-1)), value=self.pad_value)
         elif pad_to > 0:
             pad_amt = x.size(-1) % pad_to
