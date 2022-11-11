@@ -53,6 +53,8 @@ model:
     pred_hidden: 640
     joint_hidden: 640
 
+  alignments: []
+
   train_ds:
     manifest_filepath: ???
     sample_rate: ${model.sample_rate}

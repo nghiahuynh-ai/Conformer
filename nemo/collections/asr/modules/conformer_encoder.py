@@ -16,6 +16,7 @@ import math
 from collections import OrderedDict
 
 import torch
+import numpy as np
 import torch.distributed
 import torch.nn as nn
 
@@ -86,27 +87,27 @@ class ConformerEncoder(NeuralModule, Exportable):
         input_example_length = torch.randint(1, max_dim, (max_batch,)).to(dev)
         return tuple([input_example, input_example_length])
 
-    @property
-    def input_types(self):
-        """Returns definitions of module input ports.
-        """
-        return OrderedDict(
-            {
-                "audio_signal": NeuralType(('B', 'D', 'T'), SpectrogramType()),
-                "length": NeuralType(tuple('B'), LengthsType()),
-            }
-        )
+    # @property
+    # def input_types(self):
+    #     """Returns definitions of module input ports.
+    #     """
+    #     return OrderedDict(
+    #         {
+    #             "audio_signal": NeuralType(('B', 'D', 'T'), SpectrogramType()),
+    #             "length": NeuralType(tuple('B'), LengthsType()),
+    #         }
+    #     )
 
-    @property
-    def output_types(self):
-        """Returns definitions of module output ports.
-        """
-        return OrderedDict(
-            {
-                "outputs": NeuralType(('B', 'D', 'T'), AcousticEncodedRepresentation()),
-                "encoded_lengths": NeuralType(tuple('B'), LengthsType()),
-            }
-        )
+    # @property
+    # def output_types(self):
+    #     """Returns definitions of module output ports.
+    #     """
+    #     return OrderedDict(
+    #         {
+    #             "outputs": NeuralType(('B', 'D', 'T'), AcousticEncodedRepresentation()),
+    #             "encoded_lengths": NeuralType(tuple('B'), LengthsType()),
+    #         }
+    #     )
 
     def __init__(
         self,
@@ -161,6 +162,8 @@ class ConformerEncoder(NeuralModule, Exportable):
         else:
             self.pre_encode = nn.Linear(feat_in, d_model)
             self._feat_out = d_model
+            
+        self.alignment_mask = AlignmentMasking()
 
         if not untie_biases and self_attention_model == "rel_pos":
             d_head = d_model // n_heads
@@ -229,12 +232,12 @@ class ConformerEncoder(NeuralModule, Exportable):
         self.pos_enc.extend_pe(max_audio_length, device)
 
     @typecheck()
-    def forward(self, audio_signal, length=None):
+    def forward(self, audio_signal, length=None, mask=None):
         self.update_max_seq_length(seq_length=audio_signal.size(2), device=audio_signal.device)
-        return self.forward_for_export(audio_signal=audio_signal, length=length)
+        return self.forward_for_export(audio_signal=audio_signal, length=length, mask=mask)
 
     @typecheck()
-    def forward_for_export(self, audio_signal, length):
+    def forward_for_export(self, audio_signal, length, mask):
         max_audio_length: int = audio_signal.size(-1)
 
         if max_audio_length > self.max_audio_length:
@@ -249,9 +252,12 @@ class ConformerEncoder(NeuralModule, Exportable):
 
         if isinstance(self.pre_encode, ConvSubsampling):
             audio_signal, length = self.pre_encode(audio_signal, length)
-            # print('conformer block: ', length)
         else:
             audio_signal = self.pre_encode(audio_signal)
+        
+        # alignment mask
+        audio_signal = self.alignment_mask(audio_signal, mask)
+        
         audio_signal, pos_emb = self.pos_enc(audio_signal)
         # adjust size
         max_audio_length = audio_signal.size(1)
@@ -270,7 +276,7 @@ class ConformerEncoder(NeuralModule, Exportable):
             pad_mask = ~pad_mask
         else:
             pad_mask = None
-        # print('after subsampling: ', audio_signal.shape)
+        
         for lth, layer in enumerate(self.layers):
             audio_signal = layer(x=audio_signal, att_mask=att_mask, pos_emb=pos_emb, pad_mask=pad_mask)
 
@@ -303,3 +309,13 @@ class ConformerEncoder(NeuralModule, Exportable):
         mask = self.use_pad_mask
         self.use_pad_mask = on
         return mask
+
+
+class AlignmentMasking(nn.Module):
+    
+    def __init__(self):
+        super(AlignmentMasking, self).__init__()
+
+    def forward(self, input_spec, mask):
+        mask = mask.unsqueeze(1).expand(input_spec.shape)
+        return input_spec * mask

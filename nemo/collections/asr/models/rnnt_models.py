@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import errno
 import numpy as np
 import copy
 import json
@@ -94,6 +95,11 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
         else:
             self.spec_augmentation = None
 
+        if hasattr(self.cfg, 'alignments'):
+            self.alignments = self._cfg.alignments
+        else:
+            self.alignments = []
+        
         # Setup decoding objects
         self.decoding = RNNTDecoding(
             decoding_cfg=self.cfg.decoding, decoder=self.decoder, joint=self.joint, vocabulary=self.joint.vocabulary,
@@ -619,7 +625,7 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
 
     @typecheck()
     def forward(
-        self, input_signal=None, input_signal_length=None, processed_signal=None, processed_signal_length=None
+        self, input_signal=None, input_signal_length=None, mask=None, processed_signal=None, processed_signal_length=None
     ):
         """
         Forward pass of the model. Note that for RNNT Models, the forward pass of the model is a 3 step process,
@@ -941,26 +947,4 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
             **kwargs,
         )
         return encoder_exp + decoder_exp, encoder_descr + decoder_descr
-
-
-class AlignmentMasking(nn.Module):
-
-    def __init__(self, ratio=0.2):
-        super(AlignmentMasking, self).__init__()
-        self.ratio = ratio
-
-    @torch.no_grad()
-    def forward(self, input_spec):
-        sh = input_spec.shape
-
-        for idx in range(sh[0]):
-            for i in range(self.rect_masks):
-                rect_x = self._rng.randint(0, sh[1] - self.rect_freq)
-                rect_y = self._rng.randint(0, sh[2] - self.rect_time)
-
-                w_x = self._rng.randint(0, self.rect_freq)
-                w_y = self._rng.randint(0, self.rect_time)
-
-                input_spec[idx, rect_x : rect_x + w_x, rect_y : rect_y + w_y] = 0.0
-
-        return input_spec
+    
