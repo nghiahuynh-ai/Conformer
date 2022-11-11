@@ -163,7 +163,7 @@ class ConformerEncoder(NeuralModule, Exportable):
             self.pre_encode = nn.Linear(feat_in, d_model)
             self._feat_out = d_model
             
-        self.alignment_mask = AlignmentMasking()
+        # self.alignment_mask = AlignmentMasking()
 
         if not untie_biases and self_attention_model == "rel_pos":
             d_head = d_model // n_heads
@@ -256,7 +256,7 @@ class ConformerEncoder(NeuralModule, Exportable):
             audio_signal = self.pre_encode(audio_signal)
         
         # alignment mask
-        audio_signal = self.alignment_mask(audio_signal, mask)
+        # audio_signal = self.alignment_mask(audio_signal, mask)
         
         audio_signal, pos_emb = self.pos_enc(audio_signal)
         # adjust size
