@@ -685,7 +685,9 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
         else:
             encoded, encoded_len = self.forward(input_signal=signal, input_signal_length=signal_len)
         del signal
-            
+        for sample in encoded:
+            print(sample.shape)
+        raise  
         # During training, loss must be computed, so decoder forward is necessary
         decoder, target_length, states = self.decoder(targets=transcript, target_length=transcript_len)
 
