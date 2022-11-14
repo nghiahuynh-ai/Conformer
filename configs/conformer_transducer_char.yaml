@@ -53,17 +53,23 @@ model:
     pred_hidden: 640
     joint_hidden: 640
 
-  alignments: []
+  alignments:
+    apply: true
+    ratio: 0.2
+    null_id: -1 # = len(vocab)
+    start: []
+    end: []
+    score: []
 
   train_ds:
     manifest_filepath: ???
     sample_rate: ${model.sample_rate}
     batch_size: 16 # you may increase batch_size if your memory allows
-    shuffle: true
+    shuffle: false
     num_workers: 8
     pin_memory: true
     trim_silence: false
-    max_duration: 16.7 # it is set for LibriSpeech, you may need to update it for your dataset
+    max_duration: 30.0 # it is set for LibriSpeech, you may need to update it for your dataset
     min_duration: 0.1
     # tarred datasets
     is_tarred: false
