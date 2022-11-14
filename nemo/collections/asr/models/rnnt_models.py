@@ -102,7 +102,6 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
             self.null_id = len(self._cfg.labels) if self._cfg.alignments.null_id < 0 else self._cfg.alignments.null_id
             self.start = self._cfg.alignments.start
             self.end = self._cfg.alignments.end
-            self.score = self._cfg.alignments.score
         else:
             self.alignment_mask_ratio = 0.0
             self.null_id = len(self._cfg.labels)
@@ -701,7 +700,6 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
         end_batch_idx = start_batch_idx + self.batch_size
         start = self.start[start_batch_idx: end_batch_idx]
         end = self.end[start_batch_idx: end_batch_idx]
-        # score = self.score[start_batch_idx: end_batch_idx]
         for ith, sample in enumerate(transcript):
             start_idx = start[ith]
             end_idx = end[ith]
