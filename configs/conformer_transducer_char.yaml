@@ -59,7 +59,6 @@ model:
     null_id: -1 # = len(vocab)
     start: []
     end: []
-    score: []
 
   train_ds:
     manifest_filepath: ???
