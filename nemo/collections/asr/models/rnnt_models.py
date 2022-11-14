@@ -107,7 +107,6 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
             self.null_id = len(self._cfg.labels)
             self.start = []
             self.end = []
-            self.score = []
         
         # Setup decoding objects
         self.decoding = RNNTDecoding(
@@ -709,7 +708,7 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
                 if i in mask_idxs:
                     sample[i] = self.null_id
                     signal[ith][start_idx[i]: end_idx[i]] = 0.0
-            
+        del start, end, mask_idxs
     
         # forward() only performs encoder forward
         if isinstance(batch, DALIOutputs) and batch.has_processed_signal:
