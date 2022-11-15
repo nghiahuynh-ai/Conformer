@@ -108,6 +108,8 @@ def __parse_item(line: str, manifest_file: str) -> Dict[str, Any]:
         audio_file=item['audio_file'],
         duration=item['duration'],
         text=item.get('text', ""),
+        start=item.get('start', None),
+        end=item.get('end', None)
         offset=item.get('offset', None),
         speaker=item.get('speaker', None),
         orig_sr=item.get('orig_sample_rate', None),

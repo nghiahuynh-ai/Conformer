@@ -202,13 +202,15 @@ class ASRAudioText(AudioText):
             **kwargs: Kwargs to pass to `AudioText` constructor.
         """
 
-        ids, audio_files, durations, texts, offsets, speakers, orig_srs, langs = [], [], [], [], [], [], [], []
+        ids, audio_files, durations, texts, starts, ends, offsets, speakers, orig_srs, langs = [], [], [], [], [], [], [], [], [], []
         for item in manifest.item_iter(manifests_files):
             print(item)
             ids.append(item['id'])
             audio_files.append(item['audio_file'])
             durations.append(item['duration'])
             texts.append(item['text'])
+            starts.append(item['start'])
+            ends.append(item['end'])
             offsets.append(item['offset'])
             speakers.append(item['speaker'])
             orig_srs.append(item['orig_sr'])
