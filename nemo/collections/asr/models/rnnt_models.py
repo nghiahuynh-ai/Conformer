@@ -694,7 +694,7 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
     # PTL-specific methods
     def training_step(self, batch, batch_nb):
         signal, signal_len, transcript, transcript_len = batch
-        print(batch.shape)
+        print(batch)
         raise
         
         # start_batch_idx = batch_nb * self.batch_size
