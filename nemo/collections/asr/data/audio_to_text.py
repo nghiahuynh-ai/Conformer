@@ -155,7 +155,7 @@ class ASRManifestProcessor:
         return self.process_text_by_sample(sample)
 
     def process_text_by_sample(self, sample: collections.ASRAudioText.OUTPUT_TYPE) -> (List[int], int):
-        t, tl = sample.text_tokens, len(sample.text_tokens)
+        t, tl, start, end = sample.text_tokens, len(sample.text_tokens), sample.start, sample.end
 
         if self.bos_id is not None:
             t = [self.bos_id] + t
@@ -164,7 +164,7 @@ class ASRManifestProcessor:
             t = t + [self.eos_id]
             tl += 1
 
-        return t, tl
+        return t, tl, start, end
 
 
 def expand_audio_filepaths(audio_tar_filepaths, shard_strategy: str, world_size: int, global_rank: int):
@@ -240,17 +240,17 @@ class _AudioTextDataset(Dataset):
         return_sample_id (bool): whether to return the sample_id as a part of each sample
     """
 
-    @property
-    def output_types(self) -> Optional[Dict[str, NeuralType]]:
-        """Returns definitions of module output ports.
-               """
-        return {
-            'audio_signal': NeuralType(('B', 'T'), AudioSignal()),
-            'a_sig_length': NeuralType(tuple('B'), LengthsType()),
-            'transcripts': NeuralType(('B', 'T'), LabelsType()),
-            'transcript_length': NeuralType(tuple('B'), LengthsType()),
-            'sample_id': NeuralType(tuple('B'), LengthsType(), optional=True),
-        }
+    # @property
+    # def output_types(self) -> Optional[Dict[str, NeuralType]]:
+    #     """Returns definitions of module output ports.
+    #            """
+    #     return {
+    #         'audio_signal': NeuralType(('B', 'T'), AudioSignal()),
+    #         'a_sig_length': NeuralType(tuple('B'), LengthsType()),
+    #         'transcripts': NeuralType(('B', 'T'), LabelsType()),
+    #         'transcript_length': NeuralType(tuple('B'), LengthsType()),
+    #         'sample_id': NeuralType(tuple('B'), LengthsType(), optional=True),
+    #     }
 
     def __init__(
         self,
@@ -300,12 +300,12 @@ class _AudioTextDataset(Dataset):
         )
         f, fl = features, torch.tensor(features.shape[0]).long()
 
-        t, tl = self.manifest_processor.process_text_by_sample(sample=sample)
+        t, tl, s, e = self.manifest_processor.process_text_by_sample(sample=sample)
 
         if self.return_sample_id:
-            output = f, fl, torch.tensor(t).long(), torch.tensor(tl).long(), index
+            output = f, fl, torch.tensor(t).long(), torch.tensor(tl).long(), torch.tensor(s).long(), torch.tensor(e).long(), index
         else:
-            output = f, fl, torch.tensor(t).long(), torch.tensor(tl).long()
+            output = f, fl, torch.tensor(t).long(), torch.tensor(tl).long(), torch.tensor(s).long(), torch.tensor(e).long()
 
         return output
 
