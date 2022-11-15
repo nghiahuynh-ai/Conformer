@@ -700,6 +700,11 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
                 if i in mask_idxs:
                     sample[i] = self.null_id
                     signal[ith][start_idx[i]: end_idx[i]] = 0.0
+        print(transcript[-1])
+        print(start[-1])
+        print(end[-1])
+        print(mask_idxs)
+        raise
         del start, end, mask_idxs
     
         # forward() only performs encoder forward
