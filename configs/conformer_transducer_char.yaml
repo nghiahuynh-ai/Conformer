@@ -57,12 +57,12 @@ model:
     apply: true
     ratio: 0.2
     null_id: -1 # = len(vocab)
-    
+
   train_ds:
     manifest_filepath: ???
     sample_rate: ${model.sample_rate}
     batch_size: 16 # you may increase batch_size if your memory allows
-    shuffle: false
+    shuffle: true
     num_workers: 8
     pin_memory: true
     trim_silence: false
