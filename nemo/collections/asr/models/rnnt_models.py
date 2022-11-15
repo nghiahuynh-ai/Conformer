@@ -691,15 +691,16 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
     def training_step(self, batch, batch_nb):
         signal, signal_len, transcript, transcript_len, start, end = batch
         
-        for ith, sample in enumerate(transcript):
-            start_idx = start[ith]
-            end_idx = end[ith]
-            num_mask = int(self.alignment_mask_ratio * transcript_len[ith])
-            mask_idxs = np.random.choice(range(transcript_len[ith]), size=num_mask, replace=False)
-            for i in range(transcript_len[ith]):
+        for idx in range(transcript.shape[0]):
+            start_idx = start[idx]
+            end_idx = end[idx]
+            num_mask = int(self.alignment_mask_ratio * transcript_len[idx])
+            mask_idxs = np.random.choice(range(transcript_len[idx]), size=num_mask, replace=False)
+            transcript_len[idx] -=  num_mask
+            for i in range(transcript_len[idx]):
                 if i in mask_idxs:
-                    sample[i] = self.null_id
-                    signal[ith][start_idx[i]: end_idx[i]] = 0.0
+                    transcript[idx] = torch.cat([transcript[idx][:i], transcript[idx][i+1:]])
+                    signal[idx][start_idx[i]: end_idx[i]] = 0.0
         del start, end, mask_idxs
     
         # forward() only performs encoder forward
