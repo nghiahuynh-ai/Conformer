@@ -97,16 +97,16 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
             
         self.batch_size = self._cfg.train_ds.batch_size
             
-        if hasattr(self.cfg, 'alignments') and self._cfg.alignments is not None and self._cfg.alignments.apply:
-            self.alignment_mask_ratio = self._cfg.alignments.ratio
-            self.null_id = len(self._cfg.labels) if self._cfg.alignments.null_id < 0 else self._cfg.alignments.null_id
-            self.start = self._cfg.alignments.start
-            self.end = self._cfg.alignments.end
-        else:
-            self.alignment_mask_ratio = 0.0
-            self.null_id = len(self._cfg.labels)
-            self.start = []
-            self.end = []
+        # if hasattr(self.cfg, 'alignments') and self._cfg.alignments is not None and self._cfg.alignments.apply:
+        #     self.alignment_mask_ratio = self._cfg.alignments.ratio
+        #     self.null_id = len(self._cfg.labels) if self._cfg.alignments.null_id < 0 else self._cfg.alignments.null_id
+        #     self.start = self._cfg.alignments.start
+        #     self.end = self._cfg.alignments.end
+        # else:
+        #     self.alignment_mask_ratio = 0.0
+        #     self.null_id = len(self._cfg.labels)
+        #     self.start = []
+        #     self.end = []
         
         # Setup decoding objects
         self.decoding = RNNTDecoding(
@@ -695,20 +695,20 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
     def training_step(self, batch, batch_nb):
         signal, signal_len, transcript, transcript_len = batch
         
-        start_batch_idx = batch_nb * self.batch_size
-        end_batch_idx = start_batch_idx + self.batch_size
-        start = self.start[start_batch_idx: end_batch_idx]
-        end = self.end[start_batch_idx: end_batch_idx]
-        for ith, sample in enumerate(transcript):
-            start_idx = start[ith]
-            end_idx = end[ith]
-            num_mask = int(self.alignment_mask_ratio * transcript_len[ith])
-            mask_idxs = np.random.choice(range(transcript_len[ith]), size=num_mask, replace=False)
-            for i in range(transcript_len[ith]):
-                if i in mask_idxs:
-                    sample[i] = self.null_id
-                    signal[ith][start_idx[i]: end_idx[i]] = 0.0
-        del start, end, mask_idxs
+        # start_batch_idx = batch_nb * self.batch_size
+        # end_batch_idx = start_batch_idx + self.batch_size
+        # start = self.start[start_batch_idx: end_batch_idx]
+        # end = self.end[start_batch_idx: end_batch_idx]
+        # for ith, sample in enumerate(transcript):
+        #     start_idx = start[ith]
+        #     end_idx = end[ith]
+        #     num_mask = int(self.alignment_mask_ratio * transcript_len[ith])
+        #     mask_idxs = np.random.choice(range(transcript_len[ith]), size=num_mask, replace=False)
+        #     for i in range(transcript_len[ith]):
+        #         if i in mask_idxs:
+        #             sample[i] = self.null_id
+        #             signal[ith][start_idx[i]: end_idx[i]] = 0.0
+        # del start, end, mask_idxs
     
         # forward() only performs encoder forward
         if isinstance(batch, DALIOutputs) and batch.has_processed_signal:
