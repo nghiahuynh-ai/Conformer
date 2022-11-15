@@ -59,6 +59,11 @@ def _speech_collate_fn(batch, pad_id):
     elif len(packed_batch) == 4:
         sample_ids = None
         _, audio_lengths, _, tokens_lengths = packed_batch
+    elif len(packed_batch) == 6:
+        sample_ids = None
+        _, audio_lengths, _, tokens_lengths, _, _ = packed_batch
+    elif len(packed_batch) == 7:
+        _, audio_lengths, _, tokens_lengths, _, _, sample_ids = packed_batch
     else:
         raise ValueError("Expects 4 or 5 tensors in the batch!")
     max_audio_len = 0
@@ -67,9 +72,13 @@ def _speech_collate_fn(batch, pad_id):
         max_audio_len = max(audio_lengths).item()
     max_tokens_len = max(tokens_lengths).item()
 
-    audio_signal, tokens = [], []
+    audio_signal, tokens, starts, ends = [], [], [], []
     for b in batch:
-        if len(b) == 5:
+        if len(b) == 7:
+            sig, sig_len, tokens_i, tokens_i_len, start, end, _ = b
+        elif len(b) == 6:
+            sig, sig_len, tokens_i, tokens_i_len, start, end = b
+        elif len(b) == 5:
             sig, sig_len, tokens_i, tokens_i_len, _ = b
         else:
             sig, sig_len, tokens_i, tokens_i_len = b
@@ -84,19 +93,25 @@ def _speech_collate_fn(batch, pad_id):
             pad = (0, max_tokens_len - tokens_i_len)
             tokens_i = torch.nn.functional.pad(tokens_i, pad, value=pad_id)
         tokens.append(tokens_i)
-
+        starts.append(start)
+        ends.append(end)
+        
     if has_audio:
         audio_signal = torch.stack(audio_signal)
         audio_lengths = torch.stack(audio_lengths)
     else:
         audio_signal, audio_lengths = None, None
+        
     tokens = torch.stack(tokens)
     tokens_lengths = torch.stack(tokens_lengths)
+    starts = torch.stack(starts)
+    ends = torch.stack(ends)
+    
     if sample_ids is None:
-        return audio_signal, audio_lengths, tokens, tokens_lengths
+        return audio_signal, audio_lengths, tokens, tokens_lengths, starts, ends
     else:
         sample_ids = torch.tensor(sample_ids, dtype=torch.int32)
-        return audio_signal, audio_lengths, tokens, tokens_lengths, sample_ids
+        return audio_signal, audio_lengths, tokens, tokens_lengths, starts, ends, sample_ids
 
 
 class ASRManifestProcessor:
