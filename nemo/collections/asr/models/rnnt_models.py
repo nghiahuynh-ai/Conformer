@@ -696,10 +696,9 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
             end_idx = end[idx]
             num_mask = int(self.alignment_mask_ratio * transcript_len[idx])
             mask_idxs = np.random.choice(range(transcript_len[idx]), size=num_mask, replace=False)
-            transcript_len[idx] -=  num_mask
             for i in range(transcript_len[idx]):
                 if i in mask_idxs:
-                    transcript[idx] = torch.cat([transcript[idx][:i], transcript[idx][i+1:]])
+                    transcript[idx][i] = 0
                     signal[idx][start_idx[i]: end_idx[i]] = 0.0
         del start, end, mask_idxs
     
