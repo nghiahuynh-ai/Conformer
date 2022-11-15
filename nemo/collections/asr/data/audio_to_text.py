@@ -92,8 +92,8 @@ def _speech_collate_fn(batch, pad_id):
         if tokens_i_len < max_tokens_len:
             pad = (0, max_tokens_len - tokens_i_len)
             tokens_i = torch.nn.functional.pad(tokens_i, pad, value=pad_id)
-            start = torch.nn.functional.pad(start, pad, value=pad_id)
-            end = torch.nn.functional.pad(end, pad, value=pad_id)
+            # start = torch.nn.functional.pad(start, pad, value=pad_id)
+            # end = torch.nn.functional.pad(end, pad, value=pad_id)
         tokens.append(tokens_i)
         starts.append(start)
         ends.append(end)
@@ -106,8 +106,8 @@ def _speech_collate_fn(batch, pad_id):
         
     tokens = torch.stack(tokens)
     tokens_lengths = torch.stack(tokens_lengths)
-    starts = torch.stack(starts)
-    ends = torch.stack(ends)
+    starts = torch.tensor(starts)
+    ends = torch.tensor(ends)
     
     if sample_ids is None:
         return audio_signal, audio_lengths, tokens, tokens_lengths, starts, ends
