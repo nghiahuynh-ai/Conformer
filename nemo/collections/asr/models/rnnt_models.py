@@ -696,6 +696,7 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
             end_idx = end[idx]
             num_mask = int(self.alignment_mask_ratio * transcript_len[idx])
             mask_idxs = np.random.choice(range(transcript_len[idx]), size=num_mask, replace=False)
+            # mask = np.random.choice(range(self.null_id), size=num_mask)
             for i in range(transcript_len[idx]):
                 if i in mask_idxs:
                     transcript[idx][i] = self.null_id
