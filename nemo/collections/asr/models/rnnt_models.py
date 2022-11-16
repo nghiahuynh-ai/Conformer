@@ -698,8 +698,12 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
             mask_idxs = np.random.choice(range(transcript_len[idx]), size=num_mask, replace=False)
             for i in range(transcript_len[idx]):
                 if i in mask_idxs:
-                    transcript[idx][i] = 0
+                    transcript[idx][i] = self.null_id
                     signal[idx][start_idx[i]: end_idx[i]] = 0.0
+        print(start[0])
+        print(end[0])
+        print(mask_idxs)
+        print(signal[0])
         del start, end, mask_idxs
     
         # forward() only performs encoder forward
