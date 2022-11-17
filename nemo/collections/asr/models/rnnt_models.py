@@ -973,6 +973,7 @@ class AlignmentMask(nn.Module):
     def forward(self, batch):
         ratio = np.random.uniform(low=0.0, high=self.mask_ratio)
         signal, _, transcript, transcript_len, start, _ = batch
+        max_len = transcript.shape[1]
         for idx in range(transcript.shape[0]):
             start_idx = start[idx]
             num_words = transcript_len[idx] - torch.count_nonzero(transcript[idx]) + 1
@@ -988,17 +989,19 @@ class AlignmentMask(nn.Module):
                     transcript[idx][i] = -1
                 pre_char = transcript[idx][i]
             print(transcript[idx])
-            transcript[idx] = transcript[idx][transcript[idx] != -1]
+            new_text = transcript[idx][transcript[idx] != -1]
+            pad = (0, max_len - transcript[idx].shape[0])
+            transcript[idx] = torch.nn.functional.pad(new_text, pad, value=0)
             print(transcript[idx])
                 
             for i in mask:
                 signal[idx][start_idx[i], start_idx[i+1]] = 0.0
         
-        max_len = 0
-        for idx in range(transcript.shape[0]):
-            if transcript[idx].shape[0] > max_len:
-                max_len = transcript[idx].shape[0]
-        for idx in range(transcript.shape[0]):
-            pad = (0, max_len - transcript[idx].shape[0])
-            transcript[idx] = torch.nn.functional.pad(transcript[idx], pad, value=0)
+        # max_len = 0
+        # for idx in range(transcript.shape[0]):
+        #     if transcript[idx].shape[0] > max_len:
+        #         max_len = transcript[idx].shape[0]
+        # for idx in range(transcript.shape[0]):
+        #     pad = (0, max_len - transcript[idx].shape[0])
+        #     transcript[idx] = torch.nn.functional.pad(transcript[idx], pad, value=0)
         return batch
