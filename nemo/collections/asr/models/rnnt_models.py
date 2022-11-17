@@ -686,6 +686,13 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
         batch = self.alignmentmask(batch)
         
         signal, signal_len, transcript, transcript_len, _, _ = batch
+        
+        print(batch.shape)
+        print('================================')
+        print(signal[0])
+        print('================================')
+        print(transcript[0])
+        raise
     
         # forward() only performs encoder forward
         if isinstance(batch, DALIOutputs) and batch.has_processed_signal:
@@ -970,7 +977,7 @@ class AlignmentMask(nn.Module):
         signal, _, transcript, transcript_len, start, _ = batch
         for idx in range(transcript.shape[0]):
             start_idx = start[idx]
-            num_words = transcript[idx].count(0) + 1
+            num_words = transcript_len[idx] - torch.count_nonzero(transcript[idx]) + 1
             num_masks = int(ratio * num_words)
             mask = np.random.choice(range(num_words), size=num_masks, replace=False)
             
@@ -994,5 +1001,4 @@ class AlignmentMask(nn.Module):
         for idx in range(transcript.shape[0]):
             pad = (0, max_len - transcript[idx].shape[0])
             transcript[idx] = torch.nn.functional.pad(transcript[idx], pad, value=0)
-        del start, end
         return batch
