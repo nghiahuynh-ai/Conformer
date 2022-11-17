@@ -686,9 +686,7 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
         batch = self.alignmentmask(batch)
         
         signal, signal_len, transcript, transcript_len, _, _ = batch
-        print(signal[0])
-        raise
-    
+
         # forward() only performs encoder forward
         if isinstance(batch, DALIOutputs) and batch.has_processed_signal:
             encoded, encoded_len = self.forward(processed_signal=signal, processed_signal_length=signal_len)
