@@ -1006,7 +1006,6 @@ class AlignmentMask(nn.Module):
                 if i < start_idx.shape[0] - 1:
                     signal[idx][start_idx[i]: start_idx[i+1]] = 0.0
                 else:
-                    if i > len(start_idx) - 1:
                     signal[idx][start_idx[i]:] = 0.0
                 
         return batch
