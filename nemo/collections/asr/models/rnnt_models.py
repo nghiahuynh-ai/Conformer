@@ -989,7 +989,7 @@ class AlignmentMask(nn.Module):
             new_text = transcript[idx][transcript[idx] != -1]
             i = 0
             while i < new_text.shape[0]:
-                if new_text[i] == 0 and new_text[i+1] == 0 and i < new_text.shape[0] - 1:
+                if i < new_text.shape[0] - 1 and new_text[i] == 0 and new_text[i+1] == 0:
                     new_text = torch.cat([new_text[:i], new_text[i+1:]])
                 else:
                     i += 1
