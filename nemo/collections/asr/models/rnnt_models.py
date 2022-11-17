@@ -1002,6 +1002,8 @@ class AlignmentMask(nn.Module):
             transcript[idx] = new_text
                 
             for i in mask:
+                print(i)
+                raise
                 if i < start_idx.shape[0] - 1:
                     signal[idx][start_idx[i]: start_idx[i+1]] = 0.0
                 else:
