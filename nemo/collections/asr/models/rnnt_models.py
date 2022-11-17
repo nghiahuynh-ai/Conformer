@@ -972,10 +972,8 @@ class AlignmentMask(nn.Module):
         for idx in range(transcript.shape[0]):
             start_idx = start[idx]
             num_words = transcript_len[idx] - torch.count_nonzero(transcript[idx]) + 1
-            print(num_words)
             num_masks = int(ratio * num_words)
             mask = np.random.choice(range(num_words), size=num_masks, replace=False)
-            print(mask)
             
             down_len = 0
             pre_char = 0
@@ -1005,7 +1003,6 @@ class AlignmentMask(nn.Module):
                 if i < start_idx.shape[0] - 1:
                     signal[idx][start_idx[i]: start_idx[i+1]] = 0.0
                 else:
-                    print(start_idx.shape)
                     signal[idx][start_idx[i]:] = 0.0
                 
         return batch
