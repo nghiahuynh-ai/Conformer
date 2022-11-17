@@ -989,6 +989,7 @@ class AlignmentMask(nn.Module):
                 if word_idx in mask and transcript[idx][i] != 0:
                     transcript[idx][i] = -1
                 pre_char = transcript[idx][i]
+            print(transcript[idx])
             transcript[idx] = transcript[idx][transcript[idx] != -1]
                 
             for i in mask:
