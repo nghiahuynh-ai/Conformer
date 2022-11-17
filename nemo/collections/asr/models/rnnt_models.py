@@ -686,7 +686,7 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
         batch = self.alignmentmask(batch)
         
         signal, signal_len, transcript, transcript_len, _, _ = batch
-
+        print(signal[0])
         raise
     
         # forward() only performs encoder forward
@@ -987,6 +987,7 @@ class AlignmentMask(nn.Module):
                 pre_char = transcript[idx][i]
             print(transcript[idx])
             new_text = transcript[idx][transcript[idx] != -1]
+            
             i = 0
             while i < new_text.shape[0]:
                 if i < new_text.shape[0] - 1 and new_text[i] == 0 and new_text[i+1] == 0:
@@ -998,7 +999,12 @@ class AlignmentMask(nn.Module):
             new_text = torch.nn.functional.pad(new_text, (0, max_len - new_text.shape[0]), value=0)
             transcript[idx] = new_text
             print(transcript[idx])
+            print(start_idx[i].shape[0])
                 
             for i in mask:
-                signal[idx][start_idx[i]: start_idx[i+1]] = 0.0
+                if i < start_idx[i].shape[0] - 1:
+                    signal[idx][start_idx[i]: start_idx[i+1]] = 0.0
+                else:
+                    signal[idx][start_idx[i]: -1] = 0.0
+                
         return batch
