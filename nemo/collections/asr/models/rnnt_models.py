@@ -997,7 +997,7 @@ class AlignmentMask(nn.Module):
             print(transcript[idx])
                 
             for i in mask:
-                signal[idx][start_idx[i], start_idx[i+1]] = 0.0
+                signal[idx][start_idx[i]: start_idx[i+1]] = 0.0
         
         # max_len = 0
         # for idx in range(transcript.shape[0]):
