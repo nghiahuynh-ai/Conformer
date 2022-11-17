@@ -98,11 +98,12 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
         self.batch_size = self._cfg.train_ds.batch_size
             
         if hasattr(self.cfg, 'alignments') and self._cfg.alignments is not None and self._cfg.alignments.apply:
-            self.alignment_mask_ratio = self._cfg.alignments.ratio
-            self.null_id = len(self._cfg.labels) if self._cfg.alignments.null_id < 0 else self._cfg.alignments.null_id
+            self.alignmentmask = AlignmentMask(
+                mask_ratio=self._cfg.alignments.mask_ratio, 
+                mask_value=self._cfg.alignments.mask_value
+            )
         else:
-            self.alignment_mask_ratio = 0.0
-            self.null_id = len(self._cfg.labels)
+            self.alignmentmask = None
         
         # Setup decoding objects
         self.decoding = RNNTDecoding(
@@ -666,19 +667,11 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
                 f"{self} Arguments ``input_signal`` and ``input_signal_length`` are mutually exclusive "
                 " with ``processed_signal`` and ``processed_signal_len`` arguments."
             )
-            
-        # for input_length in input_signal_length:
-        #     print(input_length)
-        # print('=========================================================')
         
         if not has_processed_signal:
             processed_signal, processed_signal_length = self.preprocessor(
                 input_signal=input_signal, length=input_signal_length,
             )
-            
-        # for s in processed_signal:
-        #     print(s.shape)
-        # raise
         
         # Spec augment is not applied during evaluation/testing
         if (self.spec_augmentation is not None) and self.training:
@@ -689,19 +682,10 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
 
     # PTL-specific methods
     def training_step(self, batch, batch_nb):
-        signal, signal_len, transcript, transcript_len, start, _ = batch
         
-        for idx in range(transcript.shape[0]):
-            start_idx = start[idx]
-            end_idx = end[idx]
-            num_mask = int(self.alignment_mask_ratio * transcript_len[idx])
-            mask_idxs = np.random.choice(range(transcript_len[idx]), size=num_mask, replace=False)
-            # mask = np.random.choice(range(self.null_id), size=num_mask)
-            for i in range(transcript_len[idx]):
-                if i in mask_idxs:
-                    transcript[idx][i] = self.null_id
-                    signal[idx][start_idx[i]: end_idx[i]] = 0.0
-        del start, end, mask_idxs
+        batch = self.alignmentmask(batch)
+        
+        signal, signal_len, transcript, transcript_len, _, _ = batch
     
         # forward() only performs encoder forward
         if isinstance(batch, DALIOutputs) and batch.has_processed_signal:
@@ -971,4 +955,44 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
             **kwargs,
         )
         return encoder_exp + decoder_exp, encoder_descr + decoder_descr
-    
+
+
+class AlignmentMask(nn.Module):
+
+    def __init__(self, mask_ratio, mask_value=0.0):
+        super().__init__()
+        self.mask_ratio = mask_ratio
+        self.mask_value = mask_value
+
+    @torch.no_grad()
+    def forward(self, batch):
+        ratio = np.random.uniform(low=0.0, high=self.mask_ratio)
+        signal, _, transcript, transcript_len, start, _ = batch
+        for idx in range(transcript.shape[0]):
+            start_idx = start[idx]
+            num_words = transcript[idx].count(0) + 1
+            num_masks = int(ratio * num_words)
+            mask = np.random.choice(range(num_words), size=num_masks, replace=False)
+            
+            pre_char = 0
+            word_idx = -1
+            for i in range(transcript_len[idx]):
+                if pre_char == 0:
+                    word_idx += 1
+                if word_idx in mask and transcript[idx][i] != 0:
+                    transcript[idx][i] = -1
+                pre_char = transcript[i]
+            transcript[idx] = transcript[idx][transcript[idx] != -1]
+                
+            for i in mask:
+                signal[idx][start_idx[i], start_idx[i+1]] = 0.0
+        
+        max_len = 0
+        for idx in range(transcript.shape[0]):
+            if transcript[idx].shape[0] > max_len:
+                max_len = transcript[idx].shape[0]
+        for idx in range(transcript.shape[0]):
+            pad = (0, max_len - transcript[idx].shape[0])
+            transcript[idx] = torch.nn.functional.pad(transcript[idx], pad, value=0)
+        del start, end
+        return batch

@@ -55,8 +55,8 @@ model:
 
   alignments:
     apply: true
-    ratio: 0.2
-    null_id: -1 # = len(vocab)
+    mask_ratio: 0.5 # < 1.0
+    mask_value: 0.0
 
   train_ds:
     manifest_filepath: ???
