@@ -687,8 +687,6 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
         
         signal, signal_len, transcript, transcript_len, _, _ = batch
         
-        print(batch.shape)
-        print('================================')
         print(signal[0])
         print('================================')
         print(transcript[0])
@@ -991,6 +989,7 @@ class AlignmentMask(nn.Module):
                 pre_char = transcript[idx][i]
             print(transcript[idx])
             transcript[idx] = transcript[idx][transcript[idx] != -1]
+            print(transcript[idx])
                 
             for i in mask:
                 signal[idx][start_idx[i], start_idx[i+1]] = 0.0
