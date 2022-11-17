@@ -102,6 +102,7 @@ class AudioText(_Collection):
         durations: List[float],
         texts: List[str],
         starts: List[int],
+        ends: List[int],
         offsets: List[str],
         speakers: List[Optional[int]],
         orig_sampling_rates: List[Optional[int]],
@@ -137,8 +138,8 @@ class AudioText(_Collection):
         if index_by_file_id:
             self.mapping = {}
 
-        for id_, audio_file, duration, offset, text, start, speaker, orig_sr, lang in zip(
-            ids, audio_files, durations, offsets, texts, starts, speakers, orig_sampling_rates, langs
+        for id_, audio_file, duration, offset, text, start, end, speaker, orig_sr, lang in zip(
+            ids, audio_files, durations, offsets, texts, starts, ends, speakers, orig_sampling_rates, langs
         ):
             # Duration filters.
             if min_duration is not None and duration < min_duration:
@@ -169,7 +170,7 @@ class AudioText(_Collection):
 
             total_duration += duration
 
-            data.append(output_type(id_, audio_file, duration, text_tokens, start, offset, text, speaker, orig_sr, lang))
+            data.append(output_type(id_, audio_file, duration, text_tokens, start, end, offset, text, speaker, orig_sr, lang))
             if index_by_file_id:
                 file_id, _ = os.path.splitext(os.path.basename(audio_file))
                 self.mapping[file_id] = len(data) - 1
@@ -203,19 +204,20 @@ class ASRAudioText(AudioText):
             **kwargs: Kwargs to pass to `AudioText` constructor.
         """
 
-        ids, audio_files, durations, texts, starts, offsets, speakers, orig_srs, langs = [], [], [], [], [], [], [], [], []
+        ids, audio_files, durations, texts, starts, ends, offsets, speakers, orig_srs, langs = [], [], [], [], [], [], [], [], [], []
         for item in manifest.item_iter(manifests_files):
             ids.append(item['id'])
             audio_files.append(item['audio_file'])
             durations.append(item['duration'])
             texts.append(item['text'])
             starts.append(item['start'])
+            ends.append(item['end'])
             offsets.append(item['offset'])
             speakers.append(item['speaker'])
             orig_srs.append(item['orig_sr'])
             langs.append(item['lang'])
 
-        super().__init__(ids, audio_files, durations, texts, starts, offsets, speakers, orig_srs, langs, *args, **kwargs)
+        super().__init__(ids, audio_files, durations, texts, starts, ends, offsets, speakers, orig_srs, langs, *args, **kwargs)
 
 
 class SpeechLabel(_Collection):
