@@ -976,6 +976,7 @@ class AlignmentMask(nn.Module):
             mask = np.random.choice(range(num_words), size=num_masks, replace=False)
             
             must_delete = transcript[idx]
+            must_delete_len = transcript[idx].shape[0]
             
             down_len = 0
             pre_char = 0
@@ -1007,6 +1008,7 @@ class AlignmentMask(nn.Module):
                 else:
                     if i > len(start_idx) - 1:
                         print(must_delete)
+                        print(must_delete_len)
                         print(start_idx)
                         raise
                     signal[idx][start_idx[i]:] = 0.0
