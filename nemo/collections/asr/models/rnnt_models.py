@@ -1007,10 +1007,6 @@ class AlignmentMask(nn.Module):
                     signal[idx][start_idx[i]: start_idx[i+1]] = 0.0
                 else:
                     if i > len(start_idx) - 1:
-                        print(must_delete)
-                        print(must_delete_len)
-                        print(start_idx)
-                        raise
                     signal[idx][start_idx[i]:] = 0.0
                 
         return batch
