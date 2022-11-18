@@ -980,7 +980,7 @@ class AlignmentMask(nn.Module):
             word_idx = -1
             for i in range(transcript_len[idx]):
                 if pre_char == 0:
-                    word_idx += 1
+                    word_idx += 1  
                 if word_idx in mask and transcript[idx][i] != 0:
                     transcript[idx][i] = -1
                     # down_len += 1
@@ -1009,5 +1009,6 @@ class AlignmentMask(nn.Module):
             print(transcript[idx])
             print(transcript_len[idx])
             print(start_idx)
+            print(mask)
         
         return batch
