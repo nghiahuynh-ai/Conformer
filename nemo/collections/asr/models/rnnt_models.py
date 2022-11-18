@@ -988,6 +988,8 @@ class AlignmentMask(nn.Module):
             new_text = transcript[idx][transcript[idx] != -1]
             transcript_len[idx] -= down_len
             
+            print(transcript_len[idx])
+            
             
             i = 0
             while i < new_text.shape[0]:
@@ -1010,5 +1012,5 @@ class AlignmentMask(nn.Module):
             print(transcript_len[idx])
             print(start_idx)
             print(mask)
-        
+            
         return batch
