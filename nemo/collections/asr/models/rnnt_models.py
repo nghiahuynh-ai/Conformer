@@ -975,7 +975,6 @@ class AlignmentMask(nn.Module):
             num_masks = int(ratio * num_words)
             mask = np.random.choice(range(num_words), size=num_masks, replace=False)
             
-            # down_len = 0
             pre_char = 0
             word_idx = -1
             for i in range(transcript_len[idx]):
@@ -983,13 +982,8 @@ class AlignmentMask(nn.Module):
                     word_idx += 1  
                 if word_idx in mask and transcript[idx][i] != 0:
                     transcript[idx][i] = -1
-                    # down_len += 1
                 pre_char = transcript[idx][i]
             new_text = transcript[idx][transcript[idx] != -1]
-            # transcript_len[idx] -= down_len
-            
-            print(transcript_len[idx])
-            
             
             i = 0
             while i < new_text.shape[0]:
@@ -1010,9 +1004,5 @@ class AlignmentMask(nn.Module):
                     signal[idx][start_idx[i]: start_idx[i+1]] = 0.0
                 else:
                     signal[idx][start_idx[i]:] = 0.0
-            print(transcript[idx])
-            print(transcript_len[idx])
-            print(start_idx)
-            print(mask)
             
         return batch
