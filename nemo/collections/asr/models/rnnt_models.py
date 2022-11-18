@@ -986,14 +986,14 @@ class AlignmentMask(nn.Module):
                     down_len += 1
                 pre_char = transcript[idx][i]
             new_text = transcript[idx][transcript[idx] != -1]
-            transcript_len[idx] -= down_len
+            # transcript_len[idx] -= down_len
             
             
             i = 0
             while i < new_text.shape[0]:
                 if i < new_text.shape[0] - 1 and new_text[i] == 0 and new_text[i+1] == 0:
                     new_text = torch.cat([new_text[:i], new_text[i+1:]])
-                    transcript_len[idx] -= 1
+                    # transcript_len[idx] -= 1
                 else:
                     i += 1
             if new_text[0] == 0:
