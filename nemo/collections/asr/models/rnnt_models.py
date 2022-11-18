@@ -975,7 +975,7 @@ class AlignmentMask(nn.Module):
             num_masks = int(ratio * num_words)
             mask = np.random.choice(range(num_words), size=num_masks, replace=False)
             
-            down_len = 0
+            # down_len = 0
             pre_char = 0
             word_idx = -1
             for i in range(transcript_len[idx]):
@@ -983,32 +983,25 @@ class AlignmentMask(nn.Module):
                     word_idx += 1  
                 if word_idx in mask and transcript[idx][i] != 0:
                     transcript[idx][i] = -1
-                    down_len += 1
+                    # down_len += 1
                 pre_char = transcript[idx][i]
             new_text = transcript[idx][transcript[idx] != -1]
-            transcript_len[idx] -= down_len
+            # transcript_len[idx] -= down_len
             
             print(transcript_len[idx])
             
-            down_len = 0
-            i = 0
-            while i < transcript_len[idx]:
-                if i < transcript_len[idx] - 1:
-                    if new_text[i] == 0 and new_text[i+1] == 0:
-                        new_text = torch.cat([new_text[:i], new_text[i+1:]])
-                        down_len += 1
-                    else:
-                        i += 1
-                else:
-                    if new_text[i] == 0:
-                        new_text = torch.cat([new_text[:i], new_text[i+1:]])
-                        down_len += 1
-                    else:
-                        i += 1
-            transcript_len[idx] -= down_len
             
+            i = 0
+            while i < new_text.shape[0]:
+                if i < new_text.shape[0] - 1 and new_text[i] == 0 and new_text[i+1] == 0:
+                    new_text = torch.cat([new_text[:i], new_text[i+1:]])
+                else:
+                    i += 1
+            if new_text[-1] == 0:
+                new_text = new_text[:-1]
             if new_text[0] == 0:
                 new_text = new_text[1:]
+            transcript_len[idx] = new_text.shape[0]
             new_text = torch.nn.functional.pad(new_text, (0, max_len - new_text.shape[0]), value=0)
             transcript[idx] = new_text
                 
