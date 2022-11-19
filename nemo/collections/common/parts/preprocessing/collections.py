@@ -92,7 +92,7 @@ class AudioText(_Collection):
 
     OUTPUT_TYPE = collections.namedtuple(
         typename='AudioTextEntity',
-        field_names='id audio_file duration text_tokens start end len offset text_raw speaker orig_sr lang',
+        field_names='id audio_file duration text_tokens start end length offset text_raw speaker orig_sr lang',
     )
 
     def __init__(
@@ -103,7 +103,7 @@ class AudioText(_Collection):
         texts: List[str],
         starts: List[int],
         ends: List[int],
-        lens: List[int],
+        lengths: List[int],
         offsets: List[str],
         speakers: List[Optional[int]],
         orig_sampling_rates: List[Optional[int]],
@@ -140,7 +140,7 @@ class AudioText(_Collection):
             self.mapping = {}
 
         for id_, audio_file, duration, offset, text, start, end, length, speaker, orig_sr, lang in zip(
-            ids, audio_files, durations, offsets, texts, starts, ends, lens, speakers, orig_sampling_rates, langs
+            ids, audio_files, durations, offsets, texts, starts, ends, lengths, speakers, orig_sampling_rates, langs
         ):
             # Duration filters.
             if min_duration is not None and duration < min_duration:
@@ -205,7 +205,7 @@ class ASRAudioText(AudioText):
             **kwargs: Kwargs to pass to `AudioText` constructor.
         """
 
-        ids, audio_files, durations, texts, starts, ends, lens, offsets, speakers, orig_srs, langs = [], [], [], [], [], [], [], [], [], [], []
+        ids, audio_files, durations, texts, starts, ends, lengths, offsets, speakers, orig_srs, langs = [], [], [], [], [], [], [], [], [], [], []
         for item in manifest.item_iter(manifests_files):
             ids.append(item['id'])
             audio_files.append(item['audio_file'])
@@ -213,13 +213,13 @@ class ASRAudioText(AudioText):
             texts.append(item['text'])
             starts.append(item['start'])
             ends.append(item['end'])
-            lens.append(item['len'])
+            lengths.append(item['length'])
             offsets.append(item['offset'])
             speakers.append(item['speaker'])
             orig_srs.append(item['orig_sr'])
             langs.append(item['lang'])
 
-        super().__init__(ids, audio_files, durations, texts, starts, ends, lens, offsets, speakers, orig_srs, langs, *args, **kwargs)
+        super().__init__(ids, audio_files, durations, texts, starts, ends, lengths, offsets, speakers, orig_srs, langs, *args, **kwargs)
 
 
 class SpeechLabel(_Collection):
