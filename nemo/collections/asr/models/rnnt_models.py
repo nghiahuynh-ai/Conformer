@@ -682,11 +682,8 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
 
     # PTL-specific methods
     def training_step(self, batch, batch_nb):
-        
-        batch = self.alignmentmask(batch)
-        raise
-        
-        signal, signal_len, transcript, transcript_len, _, _, _ = batch
+
+        signal, signal_len, transcript, transcript_len, _, _, _ = self.alignmentmask(batch)
     
         # forward() only performs encoder forward
         if isinstance(batch, DALIOutputs) and batch.has_processed_signal:
@@ -978,8 +975,7 @@ class AlignmentMask(nn.Module):
             num_words = len(start_idx)
             num_masks = int(ratio * num_words)
             mask = np.random.choice(range(num_words), size=num_masks, replace=False)
-            
-            print(transcript[b])
+
             t = transcript[b]
             diff_len = 0
             for word_idx in mask:
@@ -987,18 +983,13 @@ class AlignmentMask(nn.Module):
                 if word_idx < transcript_len[b] - len_word[b][-1]:
                     t[idx: idx + len_word[b][word_idx] + 1] = -1
                     diff_len += len_word[b][word_idx] + 1
-                    # t = torch.cat([t[:idx], t[idx + len_word[b][word_idx] + 1:]])
                 else:
                     t = t[:idx]
                     diff_len += len_word[b][word_idx]
             transcript_len[b] -= diff_len
             t = t[t != -1]
             t = torch.nn.functional.pad(t, (0, max_len - t.shape[0]), value=0)
-            print(transcript_len[b])
-            print(mask)
-            print(transcript[b])
             transcript[b] = t
-            print(transcript[b])
                 
             for i in mask:
                 signal[b][start_idx[i]:end_idx[i]] = 0.0
