@@ -971,7 +971,7 @@ class AlignmentMask(nn.Module):
         ratio = np.random.uniform(low=0.0, high=self.mask_ratio)
         n_batch, max_len = transcript.shape
         
-        for b in range(batch):
+        for b in range(n_batch):
             start_idx = start[b]
             end_idx = end[b]
             
