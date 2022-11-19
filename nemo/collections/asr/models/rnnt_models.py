@@ -966,24 +966,25 @@ class AlignmentMask(nn.Module):
 
     @torch.no_grad()
     def forward(self, batch):
+        signal, _, transcript, transcript_len, start, end, len_word = batch
+        raise
         ratio = np.random.uniform(low=0.0, high=self.mask_ratio)
-        signal, _, transcript, transcript_len, start, _ = batch
-        max_len = transcript.shape[1]
-        for idx in range(transcript.shape[0]):
-            start_idx = start[idx]
+        n_batch, max_len = transcript.shape
+        for b in range(batch):
+            start_idx = start[b]
             num_words = len(start_idx)
             num_masks = int(ratio * num_words)
             mask = np.random.choice(range(num_words), size=num_masks, replace=False)
             
             pre_char = 0
             word_idx = -1
-            for i in range(transcript_len[idx]):
+            for i in range(transcript_len[b]):
                 if pre_char == 0:
                     word_idx += 1  
-                if word_idx in mask and transcript[idx][i] != 0:
-                    transcript[idx][i] = -1
-                pre_char = transcript[idx][i]
-            new_text = transcript[idx][transcript[idx] != -1]
+                if word_idx in mask and transcript[b][i] != 0:
+                    transcript[b][i] = -1
+                pre_char = transcript[b][i]
+            new_text = transcript[b][transcript[b] != -1]
             
             i = 0
             while i < new_text.shape[0]:
@@ -995,14 +996,14 @@ class AlignmentMask(nn.Module):
                 new_text = new_text[:-1]
             if new_text[0] == 0:
                 new_text = new_text[1:]
-            transcript_len[idx] = new_text.shape[0]
+            transcript_len[b] = new_text.shape[0]
             new_text = torch.nn.functional.pad(new_text, (0, max_len - new_text.shape[0]), value=0)
-            transcript[idx] = new_text
+            transcript[b] = new_text
                 
             for i in mask:
                 if i < start_idx.shape[0] - 1:
-                    signal[idx][start_idx[i]: start_idx[i+1]] = 0.0
+                    signal[b][start_idx[i]: start_idx[i+1]] = 0.0
                 else:
-                    signal[idx][start_idx[i]:] = 0.0
+                    signal[b][start_idx[i]:] = 0.0
             
         return batch
