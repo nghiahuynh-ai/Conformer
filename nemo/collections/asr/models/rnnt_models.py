@@ -770,7 +770,7 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
         return list(zip(sample_id, best_hyp_text))
 
     def validation_step(self, batch, batch_idx, dataloader_idx=0):
-        signal, signal_len, transcript, transcript_len, _, _ = batch
+        signal, signal_len, transcript, transcript_len, _, _, _ = batch
 
         # forward() only performs encoder forward
         if isinstance(batch, DALIOutputs) and batch.has_processed_signal:
