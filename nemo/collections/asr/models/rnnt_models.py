@@ -983,9 +983,9 @@ class AlignmentMask(nn.Module):
             for word_idx in mask:
                 idx = sum(len_word[b][:word_idx]) + word_idx
                 if word_idx < transcript_len[b] - len_word[b][-1]:
-                    t = torch.cat([t[b][:idx], t[b][idx + len_word[word_idx] + 1:]])
+                    t = torch.cat([t[:idx], t[idx + len_word[word_idx] + 1:]])
                 else:
-                    t = t[b][:idx-1]
+                    t = t[:idx-1]
                 transcript_len[b] -= len_word[b][word_idx] + 1
             t = torch.nn.functional.pad(t, (0, max_len - t.shape[0]), value=0)
             print(mask)
