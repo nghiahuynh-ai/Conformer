@@ -983,41 +983,15 @@ class AlignmentMask(nn.Module):
             for word_idx in mask:
                 idx = sum(len_word[b][:word_idx]) + word_idx
                 if word_idx < transcript_len[b] - len_word[b][-1]:
-                    print(idx)
-                    print(len_word[word_idx])
                     t = torch.cat([t[:idx], t[idx + len_word[b][word_idx] + 1:]])
                 else:
                     t = t[:idx-1]
-                transcript_len[b] -= len_word[b][word_idx] + 1
+                transcript_len[b] -= len_word[b][word_idx]
             t = torch.nn.functional.pad(t, (0, max_len - t.shape[0]), value=0)
             print(mask)
             print(transcript[b])
             transcript[b] = t
             print(transcript[b])
-            
-            # pre_char = 0
-            # word_idx = -1
-            # for i in range(transcript_len[b]):
-            #     if pre_char == 0:
-            #         word_idx += 1  
-            #     if word_idx in mask and transcript[b][i] != 0:
-            #         transcript[b][i] = -1
-            #     pre_char = transcript[b][i]
-            # new_text = transcript[b][transcript[b] != -1]
-            
-            # i = 0
-            # while i < new_text.shape[0]:
-            #     if i < new_text.shape[0] - 1 and new_text[i] == 0 and new_text[i+1] == 0:
-            #         new_text = torch.cat([new_text[:i], new_text[i+1:]])
-            #     else:
-            #         i += 1
-            # if new_text[-1] == 0:
-            #     new_text = new_text[:-1]
-            # if new_text[0] == 0:
-            #     new_text = new_text[1:]
-            # transcript_len[b] = new_text.shape[0]
-            # new_text = torch.nn.functional.pad(new_text, (0, max_len - new_text.shape[0]), value=0)
-            # transcript[b] = new_text
                 
             for i in mask:
                 signal[b][start_idx[i]:end_idx[i]] = 0.0
