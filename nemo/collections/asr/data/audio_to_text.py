@@ -170,7 +170,7 @@ class ASRManifestProcessor:
         return self.process_text_by_sample(sample)
 
     def process_text_by_sample(self, sample: collections.ASRAudioText.OUTPUT_TYPE) -> (List[int], int):
-        t, tl, start, end, _len = sample.text_tokens, len(sample.text_tokens), sample.start, sample.end
+        t, tl, start, end, length = sample.text_tokens, len(sample.text_tokens), sample.start, sample.end, sample.length
 
         if self.bos_id is not None:
             t = [self.bos_id] + t
@@ -179,7 +179,7 @@ class ASRManifestProcessor:
             t = t + [self.eos_id]
             tl += 1
 
-        return t, tl, start, end, _len
+        return t, tl, start, end, length
 
 
 def expand_audio_filepaths(audio_tar_filepaths, shard_strategy: str, world_size: int, global_rank: int):

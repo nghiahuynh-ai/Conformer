@@ -139,7 +139,7 @@ class AudioText(_Collection):
         if index_by_file_id:
             self.mapping = {}
 
-        for id_, audio_file, duration, offset, text, start, end, _len, speaker, orig_sr, lang in zip(
+        for id_, audio_file, duration, offset, text, start, end, length, speaker, orig_sr, lang in zip(
             ids, audio_files, durations, offsets, texts, starts, ends, lens, speakers, orig_sampling_rates, langs
         ):
             # Duration filters.
@@ -171,7 +171,7 @@ class AudioText(_Collection):
 
             total_duration += duration
 
-            data.append(output_type(id_, audio_file, duration, text_tokens, start, end, _len, offset, text, speaker, orig_sr, lang))
+            data.append(output_type(id_, audio_file, duration, text_tokens, start, end, length, offset, text, speaker, orig_sr, lang))
             if index_by_file_id:
                 file_id, _ = os.path.splitext(os.path.basename(audio_file))
                 self.mapping[file_id] = len(data) - 1
