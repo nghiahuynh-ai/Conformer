@@ -1017,9 +1017,6 @@ class AlignmentMask(nn.Module):
             # transcript_len[b] = new_text.shape[0]
             # new_text = torch.nn.functional.pad(new_text, (0, max_len - new_text.shape[0]), value=0)
             # transcript[b] = new_text
-                
-            for i in mask:
-                signal[b][start_idx[i]:end_idx[i]] = 0.0
                     
             
         return batch
