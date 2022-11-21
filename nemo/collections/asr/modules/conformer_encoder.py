@@ -316,7 +316,7 @@ class AlignmentMask(nn.Module):
     def __init__(self):
         super(AlignmentMask, self).__init__()
 
-    @torch.no_grad
+    @torch.no_grad()
     def forward(self, input_spec, mask, start, end):
         for b in range(input_spec.shape[0]):
             print(mask)
