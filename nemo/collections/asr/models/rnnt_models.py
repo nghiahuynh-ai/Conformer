@@ -635,9 +635,9 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
         input_signal_length=None, 
         processed_signal=None, 
         processed_signal_length=None,
-        mask=[],
-        start=[],
-        end=[],
+        mask=None,
+        start=None,
+        end=None,
     ):
         """
         Forward pass of the model. Note that for RNNT Models, the forward pass of the model is a 3 step process,
