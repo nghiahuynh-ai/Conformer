@@ -999,7 +999,6 @@ class AlignmentMask(nn.Module):
         
         for b in range(n_batch):
             start_idx = start[b]
-            end_idx = end[b]
             
             num_words = len(start_idx)
             num_masks = int(ratio * num_words)
