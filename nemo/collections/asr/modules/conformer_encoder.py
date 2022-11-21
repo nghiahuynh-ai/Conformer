@@ -163,7 +163,7 @@ class ConformerEncoder(NeuralModule, Exportable):
             self.pre_encode = nn.Linear(feat_in, d_model)
             self._feat_out = d_model
             
-        # self.alignment_mask = AlignmentMasking()
+        self.alignment_mask = AlignmentMask()
 
         if not untie_biases and self_attention_model == "rel_pos":
             d_head = d_model // n_heads
@@ -232,12 +232,12 @@ class ConformerEncoder(NeuralModule, Exportable):
         self.pos_enc.extend_pe(max_audio_length, device)
 
     @typecheck()
-    def forward(self, audio_signal, length=None, mask=None):
+    def forward(self, audio_signal, length=None, mask=[], start=[], end=[]):
         self.update_max_seq_length(seq_length=audio_signal.size(2), device=audio_signal.device)
-        return self.forward_for_export(audio_signal=audio_signal, length=length, mask=mask)
+        return self.forward_for_export(audio_signal=audio_signal, length=length, mask=mask, start=start, end=end)
 
     @typecheck()
-    def forward_for_export(self, audio_signal, length, mask):
+    def forward_for_export(self, audio_signal, length, mask=[], start=[], end=[]):
         max_audio_length: int = audio_signal.size(-1)
 
         if max_audio_length > self.max_audio_length:
@@ -256,7 +256,7 @@ class ConformerEncoder(NeuralModule, Exportable):
             audio_signal = self.pre_encode(audio_signal)
         
         # alignment mask
-        # audio_signal = self.alignment_mask(audio_signal, mask)
+        audio_signal = self.alignment_mask(audio_signal, mask, start, end)
         
         audio_signal, pos_emb = self.pos_enc(audio_signal)
         # adjust size
@@ -311,11 +311,14 @@ class ConformerEncoder(NeuralModule, Exportable):
         return mask
 
 
-class AlignmentMasking(nn.Module):
+class AlignmentMask(nn.Module):
     
     def __init__(self):
-        super(AlignmentMasking, self).__init__()
+        super(AlignmentMask, self).__init__()
 
-    def forward(self, input_spec, mask):
-        mask = mask.unsqueeze(1).expand(input_spec.shape)
-        return input_spec * mask
+    @torch.no_grad
+    def forward(self, input_spec, mask, start, end):
+        for b in range(input_spec.shape[0]):
+            for masked_word in mask[b]:
+                input_spec[b][start[masked_word]: end[masked_word]] = 0.0
+        return input_spec

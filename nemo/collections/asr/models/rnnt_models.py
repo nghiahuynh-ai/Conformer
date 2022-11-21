@@ -630,7 +630,14 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
 
     @typecheck()
     def forward(
-        self, input_signal=None, input_signal_length=None, processed_signal=None, processed_signal_length=None
+        self, 
+        input_signal=None, 
+        input_signal_length=None, 
+        processed_signal=None, 
+        processed_signal_length=None,
+        mask=[],
+        start=[],
+        end=[],
     ):
         """
         Forward pass of the model. Note that for RNNT Models, the forward pass of the model is a 3 step process,
@@ -677,19 +684,39 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
         if (self.spec_augmentation is not None) and self.training:
             processed_signal = self.spec_augmentation(input_spec=processed_signal, length=processed_signal_length)
         
-        encoded, encoded_len = self.encoder(audio_signal=processed_signal, length=processed_signal_length)
+        encoded, encoded_len = self.encoder(
+            audio_signal=processed_signal, 
+            length=processed_signal_length,
+            mask=mask,
+            start=start,
+            end=end,
+            )
         return encoded, encoded_len
 
     # PTL-specific methods
     def training_step(self, batch, batch_nb):
+        
+        batch, batch_mask = self.alignmentmask(batch)
 
-        signal, signal_len, transcript, transcript_len, _, _, _ = self.alignmentmask(batch)
+        signal, signal_len, transcript, transcript_len, start, end, _ = batch
     
         # forward() only performs encoder forward
         if isinstance(batch, DALIOutputs) and batch.has_processed_signal:
-            encoded, encoded_len = self.forward(processed_signal=signal, processed_signal_length=signal_len)
+            encoded, encoded_len = self.forward(
+                processed_signal=signal, 
+                processed_signal_length=signal_len,
+                mask=batch_mask,
+                start=start,
+                end=end,
+                )
         else:
-            encoded, encoded_len = self.forward(input_signal=signal, input_signal_length=signal_len)
+            encoded, encoded_len = self.forward(
+                input_signal=signal, 
+                input_signal_length=signal_len,
+                mask=batch_mask,
+                start=start,
+                end=end,
+                )
         del signal
         
         # During training, loss must be computed, so decoder forward is necessary
@@ -968,6 +995,8 @@ class AlignmentMask(nn.Module):
         ratio = np.random.uniform(low=0.0, high=self.mask_ratio)
         n_batch, max_len = transcript.shape
         
+        batch_mask = []
+        
         for b in range(n_batch):
             start_idx = start[b]
             end_idx = end[b]
@@ -975,6 +1004,7 @@ class AlignmentMask(nn.Module):
             num_words = len(start_idx)
             num_masks = int(ratio * num_words)
             mask = np.random.choice(range(num_words), size=num_masks, replace=False)
+            batch_mask.append(mask)
 
             t = transcript[b]
             diff_len = 0
@@ -991,32 +1021,7 @@ class AlignmentMask(nn.Module):
             t = torch.nn.functional.pad(t, (0, max_len - t.shape[0]), value=0)
             transcript[b] = t
                 
-            for i in mask:
-                signal[b][start_idx[i]:end_idx[i]] = 0.0
+            # for i in mask:
+            #     signal[b][start_idx[i]:end_idx[i]] = 0.0
             
-            # pre_char = 0
-            # word_idx = -1
-            # for i in range(transcript_len[b]):
-            #     if pre_char == 0:
-            #         word_idx += 1  
-            #     if word_idx in mask and transcript[b][i] != 0:
-            #         transcript[b][i] = -1
-            #     pre_char = transcript[b][i]
-            # new_text = transcript[b][transcript[b] != -1]
-            
-            # i = 0
-            # while i < new_text.shape[0]:
-            #     if i < new_text.shape[0] - 1 and new_text[i] == 0 and new_text[i+1] == 0:
-            #         new_text = torch.cat([new_text[:i], new_text[i+1:]])
-            #     else:
-            #         i += 1
-            # if new_text[-1] == 0:
-            #     new_text = new_text[:-1]
-            # if new_text[0] == 0:
-            #     new_text = new_text[1:]
-            # transcript_len[b] = new_text.shape[0]
-            # new_text = torch.nn.functional.pad(new_text, (0, max_len - new_text.shape[0]), value=0)
-            # transcript[b] = new_text
-                    
-            
-        return batch
+        return batch, batch_mask
