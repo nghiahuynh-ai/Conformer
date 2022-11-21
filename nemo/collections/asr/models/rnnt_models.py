@@ -626,7 +626,7 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
     #     return {
     #         "outputs": NeuralType(('B', 'D', 'T'), AcousticEncodedRepresentation()),
     #         "encoded_lengths": NeuralType(tuple('B'), LengthsType()),
-        }
+    #     }
 
     @typecheck()
     def forward(
@@ -1020,8 +1020,5 @@ class AlignmentMask(nn.Module):
             t = t[t != -1]
             t = torch.nn.functional.pad(t, (0, max_len - t.shape[0]), value=0)
             transcript[b] = t
-                
-            # for i in mask:
-            #     signal[b][start_idx[i]:end_idx[i]] = 0.0
             
         return batch, batch_mask
