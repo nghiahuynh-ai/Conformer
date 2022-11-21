@@ -319,6 +319,10 @@ class AlignmentMask(nn.Module):
     @torch.no_grad
     def forward(self, input_spec, mask, start, end):
         for b in range(input_spec.shape[0]):
+            print(mask)
+            print(start)
+            print(end)
             for masked_word in mask[b]:
                 input_spec[b][start[masked_word]: end[masked_word]] = 0.0
+        raise
         return input_spec
