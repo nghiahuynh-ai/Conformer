@@ -1000,6 +1000,8 @@ class AlignmentMask(nn.Module):
         for b in range(n_batch):
             start_idx = start[b]
             
+            print(transcript[b])
+            
             num_words = len(start_idx)
             num_masks = int(ratio * num_words)
             mask = np.random.choice(range(num_words), size=num_masks, replace=False)
