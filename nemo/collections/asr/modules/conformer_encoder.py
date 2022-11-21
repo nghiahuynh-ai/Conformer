@@ -326,5 +326,5 @@ class AlignmentMask(nn.Module):
                 print(start[b])
                 print(end[b])
                 print(input_spec[b, start[b][masked_word]: end[b][masked_word], :])
-        raise
+                raise
         return input_spec
