@@ -256,7 +256,8 @@ class ConformerEncoder(NeuralModule, Exportable):
             audio_signal = self.pre_encode(audio_signal)
         
         # alignment mask
-        audio_signal = self.alignment_mask(audio_signal, mask, start, end)
+        if mask and start and end:
+            audio_signal = self.alignment_mask(audio_signal, mask, start, end)
         
         audio_signal, pos_emb = self.pos_enc(audio_signal)
         # adjust size
