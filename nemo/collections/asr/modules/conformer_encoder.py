@@ -322,7 +322,7 @@ class AlignmentMask(nn.Module):
         for b in range(input_spec.shape[0]):
             print(mask[b])
             for masked_word in mask[b]:
-                if masked_word < len(start) - 1:
+                if masked_word < len(start[b]) - 1:
                     input_spec[b, start[b][masked_word]: start[b][masked_word + 1], :] = 0.0
                 else:
                     input_spec[b, start[b][masked_word]: , :] = 0.0
