@@ -635,7 +635,6 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
         input_signal_length=None, 
         processed_signal=None, 
         processed_signal_length=None,
-        mask=None,
         start=None,
         end=None,
     ):
@@ -687,7 +686,6 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
         encoded, encoded_len = self.encoder(
             audio_signal=processed_signal, 
             length=processed_signal_length,
-            mask=mask,
             start=start,
             end=end,
             )
@@ -696,7 +694,7 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
     # PTL-specific methods
     def training_step(self, batch, batch_nb):
         
-        batch, batch_mask = self.alignmentmask(batch)
+        batch = self.alignmentmask(batch)
 
         signal, signal_len, transcript, transcript_len, start, end, _ = batch
     
@@ -705,7 +703,6 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
             encoded, encoded_len = self.forward(
                 processed_signal=signal, 
                 processed_signal_length=signal_len,
-                mask=batch_mask,
                 start=start,
                 end=end,
                 )
@@ -713,7 +710,6 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
             encoded, encoded_len = self.forward(
                 input_signal=signal, 
                 input_signal_length=signal_len,
-                mask=batch_mask,
                 start=start,
                 end=end,
                 )
@@ -995,19 +991,19 @@ class AlignmentMask(nn.Module):
         ratio = np.random.uniform(low=0.0, high=self.mask_ratio)
         n_batch, max_len = transcript.shape
         
-        batch_mask = []
-        
         for b in range(n_batch):
             start_idx = start[b]
+            end_idx = end[b]
             
             num_words = len(start_idx)
             num_masks = int(ratio * num_words)
             mask = np.random.choice(range(num_words), size=num_masks, replace=False)
-            batch_mask.append(mask)
 
             t = transcript[b]
             diff_len = 0
             for word_idx in mask:
+                
+                # mask transcript
                 idx = sum(len_word[b][:word_idx]) + word_idx
                 if word_idx < transcript_len[b] - len_word[b][-1]:
                     t[idx: idx + len_word[b][word_idx] + 1] = -1
@@ -1015,9 +1011,14 @@ class AlignmentMask(nn.Module):
                 else:
                     t = t[:idx]
                     diff_len += len_word[b][word_idx]
+                
+                # mask signal
+                signal[b][start_idx[word_idx]:end_idx[word_idx]] = 0.0
+            
+            #update transcript
             transcript_len[b] -= diff_len
             t = t[t != -1]
             t = torch.nn.functional.pad(t, (0, max_len - t.shape[0]), value=0)
-            transcript[b] = t
+            transcript[b] = t 
             
-        return batch, batch_mask
+        return batch

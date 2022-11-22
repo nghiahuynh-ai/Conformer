@@ -232,12 +232,12 @@ class ConformerEncoder(NeuralModule, Exportable):
         self.pos_enc.extend_pe(max_audio_length, device)
 
     @typecheck()
-    def forward(self, audio_signal,  mask, start, end, length=None):
+    def forward(self, audio_signal, start, end, length=None):
         self.update_max_seq_length(seq_length=audio_signal.size(2), device=audio_signal.device)
-        return self.forward_for_export(audio_signal=audio_signal, length=length, mask=mask, start=start, end=end)
+        return self.forward_for_export(audio_signal=audio_signal, length=length, start=start, end=end)
 
     @typecheck()
-    def forward_for_export(self, audio_signal, length, mask, start, end):
+    def forward_for_export(self, audio_signal, length, start, end):
         max_audio_length: int = audio_signal.size(-1)
 
         if max_audio_length > self.max_audio_length:
@@ -256,8 +256,8 @@ class ConformerEncoder(NeuralModule, Exportable):
             audio_signal = self.pre_encode(audio_signal)
         
         # alignment mask
-        if mask and start and end:
-            audio_signal = self.alignment_mask(audio_signal, mask, start, end)
+        # if mask and start and end:
+        #     audio_signal = self.alignment_mask(audio_signal, mask, start, end)
         
         audio_signal, pos_emb = self.pos_enc(audio_signal)
         # adjust size
