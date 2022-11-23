@@ -1000,6 +1000,9 @@ class AlignmentMask(nn.Module):
         n_batch, max_len = batch[2].shape #transcript.shape
         
         for b in range(n_batch):
+            print(batch[2][b])
+        
+        for b in range(n_batch):
             start = batch[4][b]
             end = batch[5][b]
             
@@ -1031,7 +1034,13 @@ class AlignmentMask(nn.Module):
             
             #update transcript
             batch[3][b] -= diff_len
-            batch[2][b] = batch[2][b][batch[2][b] != 1]
+            t = batch[2][b]
+            t = t[t != 1]
+            batch[2][b] = t
             batch[2][b] = torch.nn.functional.pad(batch[2][b], (0, max_len - batch[2][b].shape[0]), value=0)
-            
+        
+        print('-----------------------------------------------------------------------------')
+        for b in range(n_batch):
+            print(batch[2][b])
+        raise
         return batch
