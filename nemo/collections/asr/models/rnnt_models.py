@@ -1000,9 +1000,6 @@ class AlignmentMask(nn.Module):
         n_batch, max_len = batch[2].shape #transcript.shape
         
         for b in range(n_batch):
-            print(batch[2][b])
-        
-        for b in range(n_batch):
             start = batch[4][b]
             end = batch[5][b]
             
