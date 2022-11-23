@@ -1024,10 +1024,6 @@ class AlignmentMask(nn.Module):
                 
                 # mask signal
                 batch[0][b] = batch[0][b, start[word_idx]: end[word_idx]] = 0.0
-                # if word_idx < len(start[b]) - 1:
-                #     signal[b][start_idx[word_idx]: start_idx[word_idx + 1]] = 0.0
-                # else:
-                #     signal[b][start_idx[word_idx]: ] = 0.0
             
             #update transcript
             batch[3][b] -= diff_len
