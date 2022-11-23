@@ -1035,7 +1035,7 @@ class AlignmentMask(nn.Module):
             #update transcript
             batch[3][b] -= diff_len
             t = batch[2][b]
-            t = t[t != 1]
+            t = t[t != -1]
             t = torch.nn.functional.pad(t, (0, max_len - t.shape[0]), value=0)
             batch[2][b] = t
         
