@@ -1013,7 +1013,11 @@ class AlignmentMask(nn.Module):
                     diff_len += len_word[b][word_idx]
                 
                 # mask signal
-                signal[b][start_idx[word_idx]:end_idx[word_idx]] = 0.0
+                signal[b][start_idx[word_idx]: end_idx[word_idx]] = 0.0
+                # if word_idx < len(start[b]) - 1:
+                #     signal[b][start_idx[word_idx]: start_idx[word_idx + 1]] = 0.0
+                # else:
+                #     signal[b][start_idx[word_idx]: ] = 0.0
             
             #update transcript
             transcript_len[b] -= diff_len
