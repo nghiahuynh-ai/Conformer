@@ -1038,9 +1038,5 @@ class AlignmentMask(nn.Module):
             t = t[t != -1]
             t = torch.nn.functional.pad(t, (0, max_len - t.shape[0]), value=0)
             batch[2][b] = t
-        
-        print('-----------------------------------------------------------------------------')
-        for b in range(n_batch):
-            print(batch[2][b])
-        raise
+            
         return batch
