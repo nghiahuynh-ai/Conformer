@@ -1008,7 +1008,8 @@ class AlignmentMask(nn.Module):
             num_words = len(start)
             num_masks = int(ratio * num_words)
             mask_prob = -1.0 * score.cpu().detach().numpy() + 1.0
-            mask_prob = mask_prob / sum(mask_prob)
+            sum_prob = sum(mask_prob)
+            mask_prob = mask_prob / sum_prob if sum_prob > 0 else (mask_prob + 1.0)/len(mask_prob)
             if np.isnan(mask_prob).any():
                 print(score)
                 print(mask_prob)
