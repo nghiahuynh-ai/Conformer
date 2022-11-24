@@ -696,7 +696,7 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
         
         batch = self.alignmentmask(batch)
 
-        signal, signal_len, transcript, transcript_len, start, end, _ = batch
+        signal, signal_len, transcript, transcript_len, start, end, _, _ = batch
     
         # forward() only performs encoder forward
         if isinstance(batch, DALIOutputs) and batch.has_processed_signal:
@@ -791,7 +791,7 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
         return list(zip(sample_id, best_hyp_text))
 
     def validation_step(self, batch, batch_idx, dataloader_idx=0):
-        signal, signal_len, transcript, transcript_len, _, _, _ = batch
+        signal, signal_len, transcript, transcript_len, _, _, _, _ = batch
 
         # forward() only performs encoder forward
         if isinstance(batch, DALIOutputs) and batch.has_processed_signal:
@@ -993,8 +993,9 @@ class AlignmentMask(nn.Module):
         #   2: transcript, 
         #   3: transcript_len, 
         #   4: start, 
-        #   5: end, 
-        #   6: len_word
+        #   5: end,
+        #   6: score, 
+        #   7: len_word
         
         ratio = np.random.uniform(low=0.0, high=self.mask_ratio)
         n_batch, max_len = batch[2].shape #transcript.shape
@@ -1002,17 +1003,19 @@ class AlignmentMask(nn.Module):
         for b in range(n_batch):
             start = batch[4][b]
             end = batch[5][b]
+            score = batch[6][b]
             
             num_words = len(start)
             num_masks = int(ratio * num_words)
-            mask = np.random.choice(range(num_words), size=num_masks, replace=False)
+            mask_prob = -1.0 * score + 1.0
+            mask = np.random.choice(range(num_words), size=num_masks, replace=False, p=mask_prob)
 
             # t = transcript[b]
             diff_len = 0
             for word_idx in mask:
                 
                 # mask transcript
-                len_word = batch[6][b]
+                len_word = batch[7][b]
                 transcript_len = batch[3][b]
                 idx = sum(len_word[:word_idx]) + word_idx
                 if word_idx < transcript_len - len_word[-1]:
