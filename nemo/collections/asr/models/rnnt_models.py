@@ -1029,7 +1029,7 @@ class AlignmentMask(nn.Module):
                 sig_len = sig.shape[0]
                 sig = torch.nn.functional.pad(sig, (0, max_signal_len - sig_len), value=0.0)
                 batch[0][b] = sig
-                batch[1][b] = sig_len
+                # batch[1][b] = sig_len
                 # batch[0][b] = batch[0][b, start[word_idx]: end[word_idx]] = 0.0
             
             #update transcript
