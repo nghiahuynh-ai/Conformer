@@ -997,7 +997,8 @@ class AlignmentMask(nn.Module):
         #   6: len_word
         
         ratio = np.random.uniform(low=0.0, high=self.mask_ratio)
-        n_batch, max_len = batch[2].shape #transcript.shape
+        n_batch, max_transcript_len = batch[2].shape #transcript.shape
+        max_signal_len = batch[0].shape[1]
         
         for b in range(n_batch):
             start = batch[4][b]
@@ -1026,6 +1027,7 @@ class AlignmentMask(nn.Module):
                 sig = batch[0][b]
                 sig = torch.cat((sig[:start[word_idx]], sig[end[word_idx]:]))
                 sig_len = sig.shape[0]
+                sig = torch.nn.functional.pad(sig, (0, max_signal_len - sig_len), value=0.0)
                 batch[0][b] = sig
                 batch[1][b] = sig_len
                 # batch[0][b] = batch[0][b, start[word_idx]: end[word_idx]] = 0.0
@@ -1034,7 +1036,7 @@ class AlignmentMask(nn.Module):
             batch[3][b] -= diff_len
             t = batch[2][b]
             t = t[t != -1]
-            t = torch.nn.functional.pad(t, (0, max_len - t.shape[0]), value=0)
+            t = torch.nn.functional.pad(t, (0, max_transcript_len - t.shape[0]), value=0)
             batch[2][b] = t
             
         return batch
