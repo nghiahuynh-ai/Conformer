@@ -1023,7 +1023,12 @@ class AlignmentMask(nn.Module):
                     diff_len += len_word[word_idx]
                 
                 # mask signal
-                batch[0][b] = batch[0][b, start[word_idx]: end[word_idx]] = 0.0
+                sig = batch[0][b]
+                sig = torch.cat((sig[:start[word_idx]], sig[end[word_idx]:]))
+                sig_len = sig.shape[0]
+                batch[0][b] = sig
+                batch[1][b] = sig_len
+                # batch[0][b] = batch[0][b, start[word_idx]: end[word_idx]] = 0.0
             
             #update transcript
             batch[3][b] -= diff_len
