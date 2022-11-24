@@ -1007,7 +1007,7 @@ class AlignmentMask(nn.Module):
             
             num_words = len(start)
             num_masks = int(ratio * num_words)
-            mask_prob = -1.0 * score + 1.0
+            mask_prob = -1.0 * score.cpu().detach().numpy() + 1.0
             mask = np.random.choice(range(num_words), size=num_masks, replace=False, p=mask_prob)
 
             # t = transcript[b]
