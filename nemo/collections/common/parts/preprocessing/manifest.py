@@ -110,6 +110,7 @@ def __parse_item(line: str, manifest_file: str) -> Dict[str, Any]:
         text=item.get('text', ""),
         start=item.get('start', None),
         end=item.get('end', None),
+        score=item.get('score', None)
         length=item.get('length', None),
         offset=item.get('offset', None),
         speaker=item.get('speaker', None),
