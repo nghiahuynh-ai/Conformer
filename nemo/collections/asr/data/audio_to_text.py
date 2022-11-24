@@ -59,11 +59,11 @@ def _speech_collate_fn(batch, pad_id):
     elif len(packed_batch) == 4:
         sample_ids = None
         _, audio_lengths, _, tokens_lengths = packed_batch
-    elif len(packed_batch) == 7:
-        sample_ids = None
-        _, audio_lengths, _, tokens_lengths, _, _, _ = packed_batch
     elif len(packed_batch) == 8:
-        _, audio_lengths, _, tokens_lengths, _, _, _, sample_ids = packed_batch
+        sample_ids = None
+        _, audio_lengths, _, tokens_lengths, _, _, _, _ = packed_batch
+    elif len(packed_batch) == 9:
+        _, audio_lengths, _, tokens_lengths, _, _, _, _, sample_ids = packed_batch
     else:
         raise ValueError("Expects 4 or 5 tensors in the batch!")
     max_audio_len = 0
@@ -72,12 +72,12 @@ def _speech_collate_fn(batch, pad_id):
         max_audio_len = max(audio_lengths).item()
     max_tokens_len = max(tokens_lengths).item()
 
-    audio_signal, tokens, starts, ends, lens = [], [], [], [], []
+    audio_signal, tokens, starts, ends, scores, lens = [], [], [], [], [], []
     for b in batch:
-        if len(b) == 8:
-            sig, sig_len, tokens_i, tokens_i_len, start, end, _len, _ = b
-        elif len(b) == 7:
-            sig, sig_len, tokens_i, tokens_i_len, start, end, _len = b
+        if len(b) == 9:
+            sig, sig_len, tokens_i, tokens_i_len, start, end, score, _len, _ = b
+        elif len(b) == 8:
+            sig, sig_len, tokens_i, tokens_i_len, start, end, score, _len = b
         elif len(b) == 5:
             sig, sig_len, tokens_i, tokens_i_len, _ = b
         else:
@@ -96,6 +96,7 @@ def _speech_collate_fn(batch, pad_id):
         tokens.append(tokens_i)
         starts.append(start)
         ends.append(end)
+        scores.append(score)
         lens.append(_len)
         
     if has_audio:
@@ -108,10 +109,10 @@ def _speech_collate_fn(batch, pad_id):
     tokens_lengths = torch.stack(tokens_lengths)
     
     if sample_ids is None:
-        return audio_signal, audio_lengths, tokens, tokens_lengths, starts, ends, lens
+        return audio_signal, audio_lengths, tokens, tokens_lengths, starts, ends, scores, lens
     else:
         sample_ids = torch.tensor(sample_ids, dtype=torch.int32)
-        return audio_signal, audio_lengths, tokens, tokens_lengths, starts, ends, lens, sample_ids
+        return audio_signal, audio_lengths, tokens, tokens_lengths, starts, ends, scores, lens, sample_ids
 
 
 class ASRManifestProcessor:
@@ -170,7 +171,7 @@ class ASRManifestProcessor:
         return self.process_text_by_sample(sample)
 
     def process_text_by_sample(self, sample: collections.ASRAudioText.OUTPUT_TYPE) -> (List[int], int):
-        t, tl, start, end, length = sample.text_tokens, len(sample.text_tokens), sample.start, sample.end, sample.length
+        t, tl, start, end, score, length = sample.text_tokens, len(sample.text_tokens), sample.start, sample.end, sample.score, sample.length
 
         if self.bos_id is not None:
             t = [self.bos_id] + t
@@ -179,7 +180,7 @@ class ASRManifestProcessor:
             t = t + [self.eos_id]
             tl += 1
 
-        return t, tl, start, end, length
+        return t, tl, start, end, score, length
 
 
 def expand_audio_filepaths(audio_tar_filepaths, shard_strategy: str, world_size: int, global_rank: int):
@@ -315,12 +316,12 @@ class _AudioTextDataset(Dataset):
         )
         f, fl = features, torch.tensor(features.shape[0]).long()
 
-        t, tl, s, e, l = self.manifest_processor.process_text_by_sample(sample=sample)
+        t, tl, start, end, score, length = self.manifest_processor.process_text_by_sample(sample=sample)
 
         if self.return_sample_id:
-            output = f, fl, torch.tensor(t).long(), torch.tensor(tl).long(), torch.tensor(s).long(), torch.tensor(e).long(), torch.tensor(l).long(), index
+            output = f, fl, torch.tensor(t).long(), torch.tensor(tl).long(), torch.tensor(start).long(), torch.tensor(end).long(), torch.tensor(score).long(), torch.tensor(length).long(), index
         else:
-            output = f, fl, torch.tensor(t).long(), torch.tensor(tl).long(), torch.tensor(s).long(), torch.tensor(e).long(), torch.tensor(l).long(),
+            output = f, fl, torch.tensor(t).long(), torch.tensor(tl).long(), torch.tensor(start).long(), torch.tensor(end).long(), torch.tensor(score).long(), torch.tensor(length).long(),
 
         return output
 
