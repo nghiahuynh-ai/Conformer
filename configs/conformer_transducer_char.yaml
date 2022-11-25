@@ -53,10 +53,7 @@ model:
     pred_hidden: 640
     joint_hidden: 640
 
-  alignments:
-    apply: true
-    mask_ratio: 0.5 # < 1.0
-    mask_value: 0.0
+  context_free: true
 
   train_ds:
     manifest_filepath: ???

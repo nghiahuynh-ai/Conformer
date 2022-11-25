@@ -98,10 +98,10 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
             
         self.batch_size = self._cfg.train_ds.batch_size
             
-        if hasattr(self.cfg, 'alignments') and self._cfg.alignments is not None and self._cfg.alignments.apply:
-            self.alignmentmask = AlignmentMask()
+        if hasattr(self.cfg, 'context_free') and self._cfg.context_free:
+            self.context_free = ContextFree()
         else:
-            self.alignmentmask = None
+            self.context_free = None
         
         # Setup decoding objects
         self.decoding = RNNTDecoding(
@@ -692,7 +692,7 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
     # PTL-specific methods
     def training_step(self, batch, batch_nb):
         
-        batch = self.alignmentmask(batch)
+        batch = self.context_free(batch)
 
         signal, signal_len, transcript, transcript_len, start, end, _ = batch
     
@@ -976,7 +976,7 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
         return encoder_exp + decoder_exp, encoder_descr + decoder_descr
 
 
-class AlignmentMask(nn.Module):
+class ContextFree(nn.Module):
 
     def __init__(self):
         super().__init__()
@@ -1005,7 +1005,7 @@ class AlignmentMask(nn.Module):
             
             sig = batch[0][b, start[word_order[0]]: end[word_order[0]]]
             tok = batch[2][b, start[word_order[0]]: end[word_order[0]]]
-            for idx in range(len(1, word_order)):
+            for idx in range(1, len(word_order)):
                 sig = torch.cat((sig, batch[0][b, start[word_order[idx]]:end[word_order[idx]]]))
                 tok_idx = sum(len_word[:word_order[idx]]) + word_order[idx]
                 tok = torch.cat((tok, torch.tensor([0]), batch[2][b, tok_idx: tok_idx + len_word[word_order[idx]]]))
@@ -1015,36 +1015,5 @@ class AlignmentMask(nn.Module):
             tok = torch.nn.functional.pad(tok, (0, max_transcript_len - tok_len), value=0.0)
             batch[0][b] = sig
             batch[2][b] = tok
-            
-            # t = transcript[b]
-            # diff_len = 0
-            # for word_idx in mask:
-                
-            #     # mask transcript
-            #     len_word = batch[6][b]
-            #     transcript_len = batch[3][b]
-            #     idx = sum(len_word[:word_idx]) + word_idx
-            #     if word_idx < transcript_len - len_word[-1]:
-            #         batch[2][b, idx: idx + len_word[word_idx] + 1] = -1
-            #         diff_len += len_word[word_idx] + 1
-            #     else:
-            #         batch[2][b] = batch[2][b, :idx]
-            #         diff_len += len_word[word_idx]
-                
-                # mask signal
-                # sig = batch[0][b]
-                # sig = torch.cat((sig[:start[word_idx]], sig[end[word_idx]:]))
-                # sig_len = sig.shape[0]
-                # sig = torch.nn.functional.pad(sig, (0, max_signal_len - sig_len), value=0.0)
-                # batch[0][b] = sig
-                # batch[1][b] = sig_len
-                # batch[0][b] = batch[0][b, start[word_idx]: end[word_idx]] = 0.0
-            
-            #update transcript
-            # batch[3][b] -= diff_len
-            # t = batch[2][b]
-            # t = t[t != -1]
-            # t = torch.nn.functional.pad(t, (0, max_transcript_len - t.shape[0]), value=0)
-            # batch[2][b] = t
             
         return batch
