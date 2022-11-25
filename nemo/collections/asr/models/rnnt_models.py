@@ -1008,7 +1008,7 @@ class ContextFree(nn.Module):
             for idx in range(1, len(word_order)):
                 sig = torch.cat((sig, batch[0][b, start[word_order[idx]]:end[word_order[idx]]]))
                 tok_idx = sum(len_word[:word_order[idx]]) + word_order[idx]
-                tok = torch.cat((tok, torch.tensor([0]), batch[2][b, tok_idx: tok_idx + len_word[word_order[idx]]]))
+                tok = torch.cat((tok, torch.tensor([0]).to(tok.device), batch[2][b, tok_idx: tok_idx + len_word[word_order[idx]]]))
             sig_len = sig.shape[0]
             tok_len = tok.shape[0]
             sig = torch.nn.functional.pad(sig, (0, max_signal_len - sig_len), value=0.0)
