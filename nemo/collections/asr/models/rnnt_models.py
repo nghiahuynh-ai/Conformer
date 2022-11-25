@@ -1004,7 +1004,8 @@ class ContextFree(nn.Module):
             random.shuffle(word_order)
             
             sig = batch[0][b, start[word_order[0]]: end[word_order[0]]]
-            tok = batch[2][b, start[word_order[0]]: end[word_order[0]]]
+            tok_idx = sum(len_word[:word_order[0]]) + word_order[0]
+            tok = batch[2][b, tok_idx: tok_idx + len_word[word_order[0]]]
             for idx in range(1, len(word_order)):
                 sig = torch.cat((sig, batch[0][b, start[word_order[idx]]:end[word_order[idx]]]))
                 tok_idx = sum(len_word[:word_order[idx]]) + word_order[idx]
