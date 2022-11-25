@@ -964,59 +964,18 @@ class AlignmentMask(nn.Module):
 
     @torch.no_grad()
     def forward(self, batch):
-        signal, _, transcript, transcript_len, start, end, len_word = batch
-        ratio = np.random.uniform(low=0.0, high=self.mask_ratio)
-        n_batch, max_len = transcript.shape
+        _, _, _, _, start, end, len_word = batch
+        n_batch = batch[0].shape[0]
         
         for b in range(n_batch):
-            start_idx = start[b]
-            end_idx = end[b]
             
-            num_words = len(start_idx)
-            num_masks = int(ratio * num_words)
+            num_words = len_word[b].shape[0]
+            num_masks = int(self.mask_ratio * num_words)
             mask = np.random.choice(range(num_words), size=num_masks, replace=False)
 
-            t = transcript[b]
-            diff_len = 0
             for word_idx in mask:
-                idx = sum(len_word[b][:word_idx]) + word_idx
-                if word_idx < transcript_len[b] - len_word[b][-1]:
-                    t[idx: idx + len_word[b][word_idx] + 1] = -1
-                    diff_len += len_word[b][word_idx] + 1
-                else:
-                    t = t[:idx]
-                    diff_len += len_word[b][word_idx]
-            transcript_len[b] -= diff_len
-            t = t[t != -1]
-            t = torch.nn.functional.pad(t, (0, max_len - t.shape[0]), value=0)
-            transcript[b] = t
-                
-            for i in mask:
-                signal[b][start_idx[i]:end_idx[i]] = 0.0
-            
-            # pre_char = 0
-            # word_idx = -1
-            # for i in range(transcript_len[b]):
-            #     if pre_char == 0:
-            #         word_idx += 1  
-            #     if word_idx in mask and transcript[b][i] != 0:
-            #         transcript[b][i] = -1
-            #     pre_char = transcript[b][i]
-            # new_text = transcript[b][transcript[b] != -1]
-            
-            # i = 0
-            # while i < new_text.shape[0]:
-            #     if i < new_text.shape[0] - 1 and new_text[i] == 0 and new_text[i+1] == 0:
-            #         new_text = torch.cat([new_text[:i], new_text[i+1:]])
-            #     else:
-            #         i += 1
-            # if new_text[-1] == 0:
-            #     new_text = new_text[:-1]
-            # if new_text[0] == 0:
-            #     new_text = new_text[1:]
-            # transcript_len[b] = new_text.shape[0]
-            # new_text = torch.nn.functional.pad(new_text, (0, max_len - new_text.shape[0]), value=0)
-            # transcript[b] = new_text
-                    
+                idx = sum(len_word[b, :word_idx]) + word_idx
+                batch[2][b, idx: idx + len_word[b, word_idx]] = 0
+                batch[0][b, start[b, word_idx]: end[b, word_idx]] = 0.0
             
         return batch
