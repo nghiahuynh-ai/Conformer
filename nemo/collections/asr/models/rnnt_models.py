@@ -974,8 +974,8 @@ class AlignmentMask(nn.Module):
             mask = np.random.choice(range(num_words), size=num_masks, replace=False)
 
             for word_idx in mask:
-                idx = sum(len_word[b, :word_idx]) + word_idx
-                batch[2][b, idx: idx + len_word[b, word_idx]] = 0
+                idx = sum(len_word[b][:word_idx]) + word_idx
+                batch[2][b, idx: idx + len_word[b][word_idx]] = 0
                 batch[0][b, start[b, word_idx]: end[b, word_idx]] = 0.0
             
         return batch
