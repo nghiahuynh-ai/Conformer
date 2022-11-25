@@ -991,8 +991,8 @@ class AlignmentMask(nn.Module):
 
     @torch.no_grad()
     def forward(self, batch):
-        signal, _, transcript, transcript_len, start, end, len_word = batch
-        ratio = np.random.uniform(low=0.0, high=self.mask_ratio)
+        _, _, transcript, transcript_len, start, _, len_word = batch
+        # ratio = np.random.uniform(low=0.0, high=self.mask_ratio)
         n_batch, max_len = transcript.shape
         
         batch_mask = []
@@ -1001,23 +1001,24 @@ class AlignmentMask(nn.Module):
             start_idx = start[b]
             
             num_words = len(start_idx)
-            num_masks = int(ratio * num_words)
+            num_masks = int(self.mask_ratio * num_words)
             mask = np.random.choice(range(num_words), size=num_masks, replace=False)
+            mask.sort()
             batch_mask.append(mask)
 
             t = transcript[b]
-            diff_len = 0
+            down_len = 0
             for word_idx in mask:
                 idx = sum(len_word[b][:word_idx]) + word_idx
                 if word_idx < transcript_len[b] - len_word[b][-1]:
                     t[idx: idx + len_word[b][word_idx] + 1] = -1
-                    diff_len += len_word[b][word_idx] + 1
+                    down_len += len_word[b][word_idx] + 1
                 else:
                     t = t[:idx]
-                    diff_len += len_word[b][word_idx]
-            transcript_len[b] -= diff_len
+                    down_len += len_word[b][word_idx]
+            batch[3][b] -= down_len
             t = t[t != -1]
             t = torch.nn.functional.pad(t, (0, max_len - t.shape[0]), value=0)
-            transcript[b] = t
+            batch[2][b] = t
             
         return batch, batch_mask
