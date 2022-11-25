@@ -976,6 +976,6 @@ class AlignmentMask(nn.Module):
             for word_idx in mask:
                 idx = sum(len_word[b][:word_idx]) + word_idx
                 batch[2][b, idx: idx + len_word[b][word_idx]] = 0
-                batch[0][b, start[b, word_idx]: end[b, word_idx]] = 0.0
+                batch[0][b, start[b][word_idx]: end[b][word_idx]] = 0.0
             
         return batch
