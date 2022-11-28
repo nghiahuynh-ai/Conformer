@@ -996,7 +996,7 @@ class AlignmentMask(nn.Module):
         #   5: end, 
         #   6: len_word
         
-        ratio = np.random.uniform(low=0.0, high=self.mask_ratio)
+        # ratio = np.random.uniform(low=0.0, high=self.mask_ratio)
         n_batch, max_transcript_len = batch[2].shape #transcript.shape
         max_signal_len = batch[0].shape[1]
         
@@ -1005,16 +1005,19 @@ class AlignmentMask(nn.Module):
             end = batch[5][b]
             
             num_words = len(start)
-            num_masks = int(ratio * num_words)
+            num_masks = int(self.mask_ratio * num_words)
             mask = np.random.choice(range(num_words), size=num_masks, replace=False)
 
-            # t = transcript[b]
+            sig = batch[0][b]
+            t = batch[2][b]
+            len_word = batch[6][b]
+            transcript_len = batch[3][b]
+            
             diff_len = 0
+            
             for word_idx in mask:
                 
                 # mask transcript
-                len_word = batch[6][b]
-                transcript_len = batch[3][b]
                 idx = sum(len_word[:word_idx]) + word_idx
                 if word_idx < transcript_len - len_word[-1]:
                     batch[2][b, idx: idx + len_word[word_idx] + 1] = -1
@@ -1024,19 +1027,19 @@ class AlignmentMask(nn.Module):
                     diff_len += len_word[word_idx]
                 
                 # mask signal
-                sig = batch[0][b]
                 sig = torch.cat((sig[:start[word_idx]], sig[end[word_idx]:]))
-                sig_len = sig.shape[0]
-                sig = torch.nn.functional.pad(sig, (0, max_signal_len - sig_len), value=0.0)
-                batch[0][b] = sig
-                # batch[1][b] = sig_len
-                # batch[0][b] = batch[0][b, start[word_idx]: end[word_idx]] = 0.0
+            
+            #update signal length
+            sig_len = sig.shape[0]
+            sig = torch.nn.functional.pad(sig, (0, max_signal_len - sig_len), value=0.0)
+            batch[0][b] = sig
             
             #update transcript
-            batch[3][b] -= diff_len
-            t = batch[2][b]
             t = t[t != -1]
             t = torch.nn.functional.pad(t, (0, max_transcript_len - t.shape[0]), value=0)
             batch[2][b] = t
+            
+            #update transcript length
+            batch[3][b] -= diff_len
             
         return batch
