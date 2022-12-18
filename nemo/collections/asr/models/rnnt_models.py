@@ -1021,7 +1021,7 @@ class AlignmentMask(nn.Module):
                 segment_power = batch[0][b, s_start: s_end]**2
                 upper = np.max(np.sqrt(segment_power))
                 lower = np.min(np.sqrt(segment_power))
-                thres = torch.from_numpy(np.random.uniform(lower, upper)).to(batch.device)
+                thres = (lower - upper)*torch.rand(1).to(batch[0].device) + upper
                 s_adjust = thres / torch.mean(torch.sqrt(segment_power))
                 batch[0][b, s_start: s_end] = s_adjust * batch[0][b, s_start: s_end]
             
