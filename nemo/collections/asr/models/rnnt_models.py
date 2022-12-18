@@ -1012,7 +1012,7 @@ class AlignmentMask(nn.Module):
                 # smoothing transcript
                 t_start = sum(len_word[:word_idx]) + word_idx
                 t_end = t_start + len_word[word_idx]
-                t_adjust = torch.mean(batch[2][b, t_start: t_end])
+                t_adjust = torch.mean(batch[2][b, t_start: t_end].float())
                 batch[2][b, t_start: t_end] = (1.0 - self.alpha) * batch[2][b, t_start: t_end] +  self.alpha * t_adjust
                 
                 # mask signal
