@@ -1002,27 +1002,22 @@ class AlignmentMask(nn.Module):
         for b in range(n_batch):
             start = batch[4][b]
             end = batch[5][b]
+            len_word = batch[6][b]
             
             num_words = len(start)
             num_masks = int(self.mask_ratio * num_words)
             mask = np.random.choice(range(num_words), size=num_masks, replace=False)
-
-            sig = batch[0][b]
-            t = batch[2][b]
-            len_word = batch[6][b]
-            transcript_len = batch[3][b]
             
             for word_idx in mask:
                 
-                # mask transcript
-                idx = sum(len_word[:word_idx]) + word_idx
-                t[idx: idx + len_word[word_idx]] = (1 - alpha) * t[idx: idx + len_word[word_idx]] + alpha / transcript_len
+                # smoothing transcript
+                t_start = sum(len_word[:word_idx]) + word_idx
+                t_end = t_start + len_word[word_idx]
+                batch[2][b, t_start: t_end] = alpha * len_word[word_idx] + (1.0 - alpha) * batch[2][b, t_start: t_end]
                 
                 # mask signal
-                sig[start[word_idx]: end[word_idx]] = 0.0
-            
-            #update signal length
-            batch[0][b] = sig
-            batch[2][b] = t
+                s_start = start[word_idx]
+                s_end = end[word_idx]
+                batch[0][b, s_start: s_end] = alpha * torch.mean(batch[0][b, s_start: s_end]) + (1.0 - alpha) * batch[0][b, s_start: s_end]
             
         return batch
