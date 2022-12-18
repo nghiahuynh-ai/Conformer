@@ -1018,7 +1018,10 @@ class AlignmentMask(nn.Module):
                 # smoothing signal
                 s_start = start[word_idx]
                 s_end = end[word_idx]
-                s_adjust = (1.0 - self.alpha) * torch.mean(torch.sqrt(batch[0][b, s_start: s_end]**2)) + self.alpha
+                segment_power = batch[0][b, s_start: s_end]**2
+                upper = np.max(np.sqrt(segment_power))
+                lower = np.min(np.sqrt(segment_power))
+                s_adjust = np.random.uniform(lower, upper) / np.mean(np.sqrt(segment_power))
                 batch[0][b, s_start: s_end] = s_adjust * batch[0][b, s_start: s_end]
             
         return batch
