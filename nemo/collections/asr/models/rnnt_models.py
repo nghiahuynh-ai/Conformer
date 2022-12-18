@@ -100,7 +100,7 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
         if hasattr(self.cfg, 'alignments') and self._cfg.alignments is not None and self._cfg.alignments.apply:
             self.alignmentmask = AlignmentMask(
                 mask_ratio=self._cfg.alignments.mask_ratio, 
-                mask_value=self._cfg.alignments.mask_value
+                alpha=self._cfg.alignments.alpha
             )
         else:
             self.alignmentmask = None
@@ -980,10 +980,10 @@ class EncDecRNNTModel(ASRModel, ASRModuleMixin, Exportable):
 
 class AlignmentMask(nn.Module):
 
-    def __init__(self, mask_ratio, mask_value=0.0):
+    def __init__(self, mask_ratio=0.2, alpha=0.1):
         super().__init__()
         self.mask_ratio = mask_ratio
-        self.mask_value = mask_value
+        self.alpha = alpha
 
     @torch.no_grad()
     def forward(self, batch):
@@ -996,7 +996,6 @@ class AlignmentMask(nn.Module):
         #   5: end, 
         #   6: len_word
         
-        alpha = 0.1
         n_batch = batch[0].shape[0]
         
         for b in range(n_batch):
@@ -1013,11 +1012,13 @@ class AlignmentMask(nn.Module):
                 # smoothing transcript
                 t_start = sum(len_word[:word_idx]) + word_idx
                 t_end = t_start + len_word[word_idx]
-                batch[2][b, t_start: t_end] = alpha * len_word[word_idx] + (1.0 - alpha) * batch[2][b, t_start: t_end]
+                t_adjust = torch.mean(batch[2][b, t_start: t_end])
+                batch[2][b, t_start: t_end] = (1.0 - self.alpha) * batch[2][b, t_start: t_end] +  self.alpha * t_adjust
                 
                 # mask signal
                 s_start = start[word_idx]
                 s_end = end[word_idx]
-                batch[0][b, s_start: s_end] = alpha * torch.mean(batch[0][b, s_start: s_end]) + (1.0 - alpha) * batch[0][b, s_start: s_end]
+                s_adjust = torch.mean(torch.sqrt(batch[0][b, s_start: s_end]**2))
+                batch[0][b, s_start: s_end] = (1.0 - self.alpha) * batch[0][b, s_start: s_end] + self.alpha * s_adjust
             
         return batch

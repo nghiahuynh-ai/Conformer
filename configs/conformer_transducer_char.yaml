@@ -55,8 +55,8 @@ model:
 
   alignments:
     apply: true
-    mask_ratio: 0.5 # < 1.0
-    mask_value: 0.0
+    mask_ratio: 0.2 # < 1.0
+    alpha: 0.1
 
   train_ds:
     manifest_filepath: ???
