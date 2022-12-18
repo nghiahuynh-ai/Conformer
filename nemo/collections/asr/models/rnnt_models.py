@@ -1007,8 +1007,8 @@ class AlignmentMask(nn.Module):
             num_masks = int(self.mask_ratio * num_words)
             mask = np.random.choice(range(num_words), size=num_masks, replace=False)
             
-            upper = np.max(batch[0][b])
-            lower = np.min(batch[0][b])
+            upper = torch.max(batch[0][b])
+            lower = torch.min(batch[0][b])
             
             for word_idx in mask:
                 
