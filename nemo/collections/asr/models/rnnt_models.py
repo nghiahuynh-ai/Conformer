@@ -1015,10 +1015,10 @@ class AlignmentMask(nn.Module):
                 t_adjust = torch.mean(batch[2][b, t_start: t_end].float())
                 batch[2][b, t_start: t_end] = (1.0 - self.alpha) * batch[2][b, t_start: t_end] +  self.alpha * t_adjust
                 
-                # mask signal
+                # smoothing signal
                 s_start = start[word_idx]
                 s_end = end[word_idx]
-                s_adjust = torch.mean(torch.sqrt(batch[0][b, s_start: s_end]**2))
-                batch[0][b, s_start: s_end] = (1.0 - self.alpha) * batch[0][b, s_start: s_end] + self.alpha * s_adjust
+                s_adjust = (1.0 - self.alpha) * torch.mean(torch.sqrt(batch[0][b, s_start: s_end]**2)) + self.alpha
+                batch[0][b, s_start: s_end] = s_adjust * batch[0][b, s_start: s_end]
             
         return batch
