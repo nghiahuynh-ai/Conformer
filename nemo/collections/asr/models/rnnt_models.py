@@ -1007,22 +1007,17 @@ class AlignmentMask(nn.Module):
             num_masks = int(self.mask_ratio * num_words)
             mask = np.random.choice(range(num_words), size=num_masks, replace=False)
             
-            upper = torch.max(batch[0][b])
-            lower = torch.min(batch[0][b])
-            
             for word_idx in mask:
                 
                 # smoothing transcript
                 t_start = sum(len_word[:word_idx]) + word_idx
                 t_end = t_start + len_word[word_idx]
-                t_adjust = torch.mean(batch[2][b, t_start: t_end].float())
+                t_adjust = torch.mean(batch[2][b, t_start: t_end].float()) + (word_idx + 1) / num_words
                 batch[2][b, t_start: t_end] = (1.0 - self.alpha) * batch[2][b, t_start: t_end] +  self.alpha * t_adjust
                 
                 # smoothing signal
                 s_start = start[word_idx]
                 s_end = end[word_idx]
-                segment_power = torch.sqrt(batch[0][b, s_start: s_end]**2)
-                s_adjust = ((lower - upper) * torch.rand(1).to(batch[0].device) + upper) / torch.mean(segment_power)
-                batch[0][b, s_start: s_end] = s_adjust * batch[0][b, s_start: s_end]
+                batch[0][b, s_start: s_end] = self.alpha * (s_end - s_start)/batch[1][b] * batch[0][b, s_start: s_end]
             
         return batch
