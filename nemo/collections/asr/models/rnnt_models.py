@@ -1018,6 +1018,6 @@ class AlignmentMask(nn.Module):
                 # smoothing signal
                 s_start = start[word_idx]
                 s_end = end[word_idx]
-                batch[0][b, s_start: s_end] = self.alpha * (s_end - s_start) / batch[1][b] * batch[0][b, s_start: s_end]
+                batch[0][b, s_start: s_end] = self.alpha * batch[0][b, s_start: s_end]
             
         return batch
