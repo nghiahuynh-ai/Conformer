@@ -314,7 +314,7 @@ class GreedyRNNTInfer(_GreedyRNNTInfer):
                 #     last_label = label_collate([[hypothesis.last_token]])
                     
                 if len(hypothesis.y_sequence) < 1:
-                    label = torch.tensor([self._SOS])
+                    label = self._SOS
                 else:
                     label = hypothesis.y_sequence
 
