@@ -533,7 +533,7 @@ class StackedLSTM(torch.nn.Module):
         return output, output_states
 
 
-def xlabel_collate(labels, device=None):
+def label_collate(labels, device=None):
     """Collates the label inputs for the rnn-t prediction network.
     If `labels` is already in torch.Tensor form this is a no-op.
 
