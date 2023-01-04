@@ -30,6 +30,10 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import torch
 
+from nemo.collections.asr.parts.submodules.multi_head_attention import (
+    MultiHeadAttention,
+    DualMultiHeadAttention,
+)
 from nemo.collections.asr.modules import rnnt_abstract
 from nemo.collections.asr.parts.utils import rnnt_utils
 from nemo.collections.common.parts import rnn
@@ -259,6 +263,11 @@ class RNNTDecoder(rnnt_abstract.AbstractRNNTDecoder, Exportable):
                 B = batch_size
 
             y = torch.zeros((B, 1, self.pred_hidden), device=device, dtype=dtype)
+        
+        print(y.shape())
+        
+        if self.prediction['att'] is not None:
+            y = self.prediction['att'](y, y, y, None, None)
 
         # Prepend blank "start of sequence" symbol (zero tensor)
         if add_sos:
@@ -294,6 +303,9 @@ class RNNTDecoder(rnnt_abstract.AbstractRNNTDecoder, Exportable):
         hidden_hidden_bias_scale,
         dropout,
         rnn_hidden_size,
+        att_layers=0,
+        att_heads=8,
+        att_model='dual',
     ):
         """
         Prepare the trainable parameters of the Prediction Network.
@@ -316,10 +328,39 @@ class RNNTDecoder(rnnt_abstract.AbstractRNNTDecoder, Exportable):
             embed = torch.nn.Embedding(vocab_size + 1, pred_n_hidden, padding_idx=self.blank_idx)
         else:
             embed = torch.nn.Embedding(vocab_size, pred_n_hidden)
+        
+        if att_layers > 0:
+            att = []
+            for _ in range(att_layers):
+                if att_model == 'dual':
+                    att.append(
+                        DualMultiHeadAttention(
+                            n_head=att_heads,
+                            n_feat=pred_n_hidden,
+                            dropout_rate=dropout
+                        )
+                    )
+                elif att_model == 'abs_pos':
+                    att.append(
+                        MultiHeadAttention(
+                            n_head=att_heads,
+                            n_feat=pred_n_hidden,
+                            dropout_rate=dropout
+                        )
+                    )
+                else:
+                    raise ValueError(
+                        f"'{att_model}' is not not a valid value for 'att_model', "
+                        f"valid values can be from ['dual', 'abs_pos']"
+            )
+            att = torch.nn.Sequential(att)
+        else:
+            att = None
 
         layers = torch.nn.ModuleDict(
             {
                 "embed": embed,
+                "att": att,
                 "dec_rnn": rnn.rnn(
                     input_size=pred_n_hidden,
                     hidden_size=rnn_hidden_size if rnn_hidden_size > 0 else pred_n_hidden,
