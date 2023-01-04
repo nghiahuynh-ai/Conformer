@@ -145,7 +145,6 @@ class RNNTDecoder(rnnt_abstract.AbstractRNNTDecoder, Exportable):
         blank_as_pad: bool = True,
         att_layers: int = 0,
         att_heads: int = 8,
-        att_dim: int = 512,
         att_model: str = 'dual',
     ):
         # Required arguments
@@ -187,7 +186,6 @@ class RNNTDecoder(rnnt_abstract.AbstractRNNTDecoder, Exportable):
             rnn_hidden_size=prednet.get("rnn_hidden_size", -1),
             att_layers=att_layers,
             att_heads=att_heads,
-            att_dim=att_dim,
             att_model=att_model,
         )
         self._rnnt_export = False
@@ -322,7 +320,6 @@ class RNNTDecoder(rnnt_abstract.AbstractRNNTDecoder, Exportable):
         rnn_hidden_size,
         att_layers=0,
         att_heads=8,
-        att_dim=512,
         att_model='dual',
     ):
         """
@@ -343,9 +340,9 @@ class RNNTDecoder(rnnt_abstract.AbstractRNNTDecoder, Exportable):
             rnn_hidden_size: the hidden size of the RNN, if not specified, pred_n_hidden would be used
         """
         if self.blank_as_pad:
-            embed = torch.nn.Embedding(vocab_size + 1, att_dim, padding_idx=self.blank_idx)
+            embed = torch.nn.Embedding(vocab_size + 1, pred_n_hidden, padding_idx=self.blank_idx)
         else:
-            embed = torch.nn.Embedding(vocab_size, att_dim)
+            embed = torch.nn.Embedding(vocab_size, pred_n_hidden)
         
         if att_layers > 0:
             att = torch.nn.ModuleList()
@@ -354,7 +351,7 @@ class RNNTDecoder(rnnt_abstract.AbstractRNNTDecoder, Exportable):
                     att.append(
                         DualMultiHeadAttention(
                             n_head=att_heads,
-                            n_feat=att_dim,
+                            n_feat=pred_n_hidden,
                             dropout_rate=dropout
                         )
                     )
@@ -362,7 +359,7 @@ class RNNTDecoder(rnnt_abstract.AbstractRNNTDecoder, Exportable):
                     att.append(
                         MultiHeadAttention(
                             n_head=att_heads,
-                            n_feat=att_dim,
+                            n_feat=pred_n_hidden,
                             dropout_rate=dropout
                         )
                     )
@@ -378,7 +375,6 @@ class RNNTDecoder(rnnt_abstract.AbstractRNNTDecoder, Exportable):
             {
                 "embed": embed,
                 "att": att,
-                "linear": torch.nn.Linear(att_dim, pred_n_hidden),
                 "dec_rnn": rnn.rnn(
                     input_size=pred_n_hidden,
                     hidden_size=rnn_hidden_size if rnn_hidden_size > 0 else pred_n_hidden,
