@@ -347,22 +347,14 @@ class RNNTDecoder(rnnt_abstract.AbstractRNNTDecoder, Exportable):
         
         if att_layers > 0:
             att = []
-            for _ in range(att_layers):
+            for ith in range(att_layers):
                 if att_model == 'dual':
                     att.append(
-                        DualMultiHeadAttention(
-                            n_head=att_heads,
-                            n_feat=pred_n_hidden,
-                            dropout_rate=dropout
-                        )
+                        (f'att_{ith}', DualMultiHeadAttention(n_head=att_heads, n_feat=pred_n_hidden, dropout_rate=dropout))
                     )
                 elif att_model == 'abs_pos':
                     att.append(
-                        MultiHeadAttention(
-                            n_head=att_heads,
-                            n_feat=pred_n_hidden,
-                            dropout_rate=dropout
-                        )
+                        (f'att_{ith}', MultiHeadAttention(n_head=att_heads, n_feat=pred_n_hidden, dropout_rate=dropout))
                     )
                 else:
                     raise ValueError(
