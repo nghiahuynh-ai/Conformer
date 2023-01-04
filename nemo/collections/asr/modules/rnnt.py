@@ -151,9 +151,19 @@ class RNNTDecoder(rnnt_abstract.AbstractRNNTDecoder, Exportable):
         self.pred_hidden = prednet['pred_hidden']
         self.pred_rnn_layers = prednet["pred_rnn_layers"]
         self.blank_idx = vocab_size
+        self.att_layers = att_layers
+        self.att_heads = att_heads
+        self.att_model = att_model
 
         # Initialize the model (blank token increases vocab size by 1)
-        super().__init__(vocab_size=vocab_size, blank_idx=self.blank_idx, blank_as_pad=blank_as_pad)
+        super().__init__(
+            vocab_size=vocab_size, 
+            blank_idx=self.blank_idx, 
+            blank_as_pad=blank_as_pad,
+            att_layers=att_layers,
+            att_heads=att_heads,
+            att_model=att_model
+        )
 
         # Optional arguments
         forget_gate_bias = prednet.get('forget_gate_bias', 1.0)
