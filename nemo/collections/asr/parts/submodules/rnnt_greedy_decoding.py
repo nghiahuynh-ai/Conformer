@@ -158,7 +158,7 @@ class _GreedyRNNTInfer(Typing):
             if label == self._SOS:
                 return self.decoder.predict(None, hidden, add_sos=add_sos, batch_size=batch_size)
 
-            # label = label_collate([[label]])
+            label = label_collate([[label]])
 
         # output: [B, 1, K]
         return self.decoder.predict(label, hidden, add_sos=add_sos, batch_size=batch_size)
@@ -308,23 +308,13 @@ class GreedyRNNTInfer(_GreedyRNNTInfer):
             while not_blank and (self.max_symbols is None or symbols_added < self.max_symbols):
                 # In the first timestep, we initialize the network with RNNT Blank
                 # In later timesteps, we provide previous predicted label as input.
-                # if hypothesis.last_token is None and hypothesis.dec_state is None:
-                #     last_label = self._SOS
-                # else:
-                #     last_label = label_collate([[hypothesis.last_token]])
-                    
-                if len(hypothesis.y_sequence) < 1:
-                    label = torch.tensor([self._SOS])
+                if hypothesis.last_token is None and hypothesis.dec_state is None:
+                    last_label = self._SOS
                 else:
-                    label = torch.tensor([hypothesis.y_sequence])
-                
-                # print('-------------------------------------------')
-                # print(label)
-                # print('-------------------------------------------')
+                    last_label = label_collate([[hypothesis.last_token]])
 
                 # Perform prediction network and joint network steps.
-                # g, hidden_prime = self._pred_step(last_label, hypothesis.dec_state)
-                g, hidden_prime = self._pred_step(label, hypothesis.dec_state)
+                g, hidden_prime = self._pred_step(last_label, hypothesis.dec_state)
                 logp = self._joint_step(f, g, log_normalize=None)[0, 0, 0, :]
 
                 del g
