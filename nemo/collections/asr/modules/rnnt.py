@@ -143,6 +143,9 @@ class RNNTDecoder(rnnt_abstract.AbstractRNNTDecoder, Exportable):
         normalization_mode: Optional[str] = None,
         random_state_sampling: bool = False,
         blank_as_pad: bool = True,
+        att_layers = 0,
+        att_heads = 8,
+        att_model = 'dual',
     ):
         # Required arguments
         self.pred_hidden = prednet['pred_hidden']
@@ -171,6 +174,9 @@ class RNNTDecoder(rnnt_abstract.AbstractRNNTDecoder, Exportable):
             hidden_hidden_bias_scale=hidden_hidden_bias_scale,
             dropout=dropout,
             rnn_hidden_size=prednet.get("rnn_hidden_size", -1),
+            att_layers=att_layers,
+            att_heads=att_heads,
+            att_model=att_model,
         )
         self._rnnt_export = False
 
@@ -264,7 +270,7 @@ class RNNTDecoder(rnnt_abstract.AbstractRNNTDecoder, Exportable):
 
             y = torch.zeros((B, 1, self.pred_hidden), device=device, dtype=dtype)
         
-        print(y.shape())
+        print(y.shape)
         
         if self.prediction['att'] is not None:
             y = self.prediction['att'](y, y, y, None, None)

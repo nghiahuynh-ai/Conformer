@@ -152,6 +152,10 @@ model:
       t_max: null
       dropout: 0.1
 
+    att_layers: 1
+    att_heads: 8
+    att_model: 'dual'
+
   joint:
     _target_: nemo.collections.asr.modules.RNNTJoint
     log_softmax: null  # 'null' would set it automatically according to CPU/GPU device
