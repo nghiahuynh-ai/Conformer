@@ -146,7 +146,8 @@ model:
     random_state_sampling: false # Random state sampling: https://arxiv.org/pdf/1910.11455.pdf
     blank_as_pad: true # This flag must be set in order to support exporting of RNNT models + efficient inference.
     att_layers: 1
-    att_heads: 8
+    att_heads: 4
+    att_dim: ${model.encoder.d_model}
     att_model: 'dual'
 
     prednet:
