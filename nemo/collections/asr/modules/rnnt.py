@@ -143,9 +143,9 @@ class RNNTDecoder(rnnt_abstract.AbstractRNNTDecoder, Exportable):
         normalization_mode: Optional[str] = None,
         random_state_sampling: bool = False,
         blank_as_pad: bool = True,
-        att_layers = 0,
-        att_heads = 8,
-        att_model = 'dual',
+        att_layers: int = 0,
+        att_heads: int = 8,
+        att_model: str = 'dual',
     ):
         # Required arguments
         self.pred_hidden = prednet['pred_hidden']
