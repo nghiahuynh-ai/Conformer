@@ -317,6 +317,10 @@ class GreedyRNNTInfer(_GreedyRNNTInfer):
                     label = torch.tensor([self._SOS])
                 else:
                     label = hypothesis.y_sequence
+                
+                print('-------------------------------------------')
+                print(label)
+                print('-------------------------------------------')
 
                 # Perform prediction network and joint network steps.
                 # g, hidden_prime = self._pred_step(last_label, hypothesis.dec_state)
