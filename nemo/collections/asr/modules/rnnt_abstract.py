@@ -82,12 +82,15 @@ class AbstractRNNTDecoder(NeuralModule, ABC):
             It is also more efficient to use greedy batch decoding with this flag.
     """
 
-    def __init__(self, vocab_size, blank_idx, blank_as_pad):
+    def __init__(self, vocab_size, blank_idx, blank_as_pad, att_layers, att_heads, att_model):
         super().__init__()
 
         self.vocab_size = vocab_size
         self.blank_idx = blank_idx  # first or last index of vocabulary
         self.blank_as_pad = blank_as_pad
+        self.att_layers = att_layers
+        self.att_heads = att_heads
+        self.att_model = att_model
 
         if blank_idx not in [0, vocab_size]:
             raise ValueError("`blank_idx` must be either 0 or the final token of the vocabulary")
