@@ -280,8 +280,6 @@ class RNNTDecoder(rnnt_abstract.AbstractRNNTDecoder, Exportable):
 
             y = torch.zeros((B, 1, self.pred_hidden), device=device, dtype=dtype)
         
-        print(y.shape)
-        
         if self.prediction['att'] is not None:
             for att_layer in self.prediction['att']:
                 y = att_layer(y, y, y, None, None)
