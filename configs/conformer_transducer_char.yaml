@@ -145,16 +145,15 @@ model:
     normalization_mode: null # Currently only null is supported for export.
     random_state_sampling: false # Random state sampling: https://arxiv.org/pdf/1910.11455.pdf
     blank_as_pad: true # This flag must be set in order to support exporting of RNNT models + efficient inference.
+    att_layers: 1
+    att_heads: 8
+    att_model: 'dual'
 
     prednet:
       pred_hidden: ${model.model_defaults.pred_hidden}
       pred_rnn_layers: 1
       t_max: null
       dropout: 0.1
-
-    # att_layers: 1
-    # att_heads: 8
-    # att_model: 'dual'
 
   joint:
     _target_: nemo.collections.asr.modules.RNNTJoint
