@@ -283,7 +283,8 @@ class RNNTDecoder(rnnt_abstract.AbstractRNNTDecoder, Exportable):
         print(y.shape)
         
         if self.prediction['att'] is not None:
-            y = self.prediction['att'](y, y, y, None, None)
+            for att_layer in self.prediction['att']:
+                y = att_layer(y, y, y, None, None)
 
         # Prepend blank "start of sequence" symbol (zero tensor)
         if add_sos:
@@ -346,22 +347,29 @@ class RNNTDecoder(rnnt_abstract.AbstractRNNTDecoder, Exportable):
             embed = torch.nn.Embedding(vocab_size, pred_n_hidden)
         
         if att_layers > 0:
-            att = []
-            for ith in range(att_layers):
+            att = torch.nn.ModuleList()
+            for _ in range(att_layers):
                 if att_model == 'dual':
                     att.append(
-                        (f'att_{ith}', DualMultiHeadAttention(n_head=att_heads, n_feat=pred_n_hidden, dropout_rate=dropout))
+                        DualMultiHeadAttention(
+                            n_head=att_heads,
+                            n_feat=pred_n_hidden,
+                            dropout_rate=dropout
+                        )
                     )
                 elif att_model == 'abs_pos':
                     att.append(
-                        (f'att_{ith}', MultiHeadAttention(n_head=att_heads, n_feat=pred_n_hidden, dropout_rate=dropout))
+                        MultiHeadAttention(
+                            n_head=att_heads,
+                            n_feat=pred_n_hidden,
+                            dropout_rate=dropout
+                        )
                     )
                 else:
                     raise ValueError(
                         f"'{att_model}' is not not a valid value for 'att_model', "
                         f"valid values can be from ['dual', 'abs_pos']"
             )
-            att = torch.nn.Sequential(att)
         else:
             att = None
 
